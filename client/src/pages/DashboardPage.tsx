@@ -13,6 +13,8 @@ import { Card } from "../ui/Card";
 import { MatchCard } from "../components/MatchCard";
 import { InsightsBar } from "../components/InsightsBar";
 
+const TIME_LABELS: Record<string, string> = { morning: "Morgen (5–11)", afternoon: "Eftermiddag (12–16)", evening: "Aften (17–21)", night: "Nat (22–4)", unknown: "Ukendt tid" };
+
 export function DashboardPage() {
   const { data = [], isLoading } = useMatches();
 
@@ -102,7 +104,7 @@ export function DashboardPage() {
 
       {/* InsightsBar lists */}
       <div className="grid gap-4 md:grid-cols-2">
-        <InsightsBar title="Sejrsrate efter tidspunkt" rows={s.byTimeOfDay} />
+        <InsightsBar title="Sejrsrate efter tidspunkt" rows={s.byTimeOfDay.map((r) => ({ ...r, key: TIME_LABELS[r.key] ?? r.key }))} />
         <InsightsBar title="Sejrsrate efter ugedag" rows={s.byWeekday} />
         <InsightsBar title="Bedste baner" rows={s.byArena} />
         <InsightsBar title="Modstandere" rows={s.byOpponent} />
@@ -172,7 +174,7 @@ export function DashboardPage() {
           <Link to="/matches" className="text-sm text-terracotta">Se alle</Link>
         </div>
         <div className="space-y-3">
-          {data.slice(0, 5).map((m) => <MatchCard key={m.id} m={m} />)}
+          {filtered.slice(0, 5).map((m) => <MatchCard key={m.id} m={m} />)}
         </div>
       </div>
     </div>

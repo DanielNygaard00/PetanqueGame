@@ -23,6 +23,10 @@ export function MatchFormPage() {
   const drinkNames = useOptions("drink_names");
   const addArena = useAddOption("arenas");
   const addPlayer = useAddOption("players");
+  const addDrinkType = useAddOption("drink_types");
+  const addDrinkCategory = useAddOption("drink_categories");
+  const addDrinkBrand = useAddOption("drink_brands");
+  const addDrinkName = useAddOption("drink_names");
 
   const [form, setForm] = useState<Partial<Match>>({ Vundet: false, Gruppe_Bool: false, drinks: [] as Drink[] });
   const [error, setError] = useState<string | null>(null);
@@ -62,12 +66,12 @@ export function MatchFormPage() {
         <SelectOrAdd label="Spiller" value={form.Spiller ?? ""} options={(players.data ?? []).map((o) => o.name)} onChange={(v) => set({ Spiller: v })} onAdd={(v) => addPlayer.mutate(v)} />
         <SelectOrAdd label="Arena" value={form.Arena ?? ""} options={(arenas.data ?? []).map((o) => o.name)} onChange={(v) => set({ Arena: v })} onAdd={(v) => addArena.mutate(v)} />
         <Input label="Modstander" value={form.Modstander ?? ""} onChange={(e) => set({ Modstander: e.target.value })} />
-        <Input label="Point" type="number" value={form.Point ?? ""} onChange={(e) => set({ Point: Number(e.target.value) })} />
+        <Input label="Point" type="number" value={form.Point ?? ""} onChange={(e) => set({ Point: e.target.value === "" ? undefined : Number(e.target.value) })} />
         <Input label="Modstander point" type="number" value={form.Modstander_Point ?? ""} onChange={(e) => set({ Modstander_Point: e.target.value === "" ? undefined : Number(e.target.value) })} />
         <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.Vundet} onChange={(e) => set({ Vundet: e.target.checked })} /> Vundet</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.Gruppe_Bool} onChange={(e) => set({ Gruppe_Bool: e.target.checked })} /> Gruppespil</label>
         {form.Gruppe_Bool && <Input label="Gruppemedlemmer" value={form.Gruppe_medlemmer ?? ""} onChange={(e) => set({ Gruppe_medlemmer: e.target.value })} />}
-        <Input label="Konsekutive spil" type="number" value={form["Konsekutive spil"] ?? ""} onChange={(e) => set({ "Konsekutive spil": Number(e.target.value) })} />
+        <Input label="Konsekutive spil" type="number" value={form["Konsekutive spil"] ?? ""} onChange={(e) => set({ "Konsekutive spil": e.target.value === "" ? undefined : Number(e.target.value) })} />
         <Input label="Spillets genstande" value={form["Spillets genstande"] ?? ""} onChange={(e) => set({ "Spillets genstande": e.target.value })} />
       </Card>
       <Card>
@@ -79,6 +83,10 @@ export function MatchFormPage() {
           categoryOptions={(drinkCategories.data ?? []).map((o) => o.name)}
           brandOptions={(drinkBrands.data ?? []).map((o) => o.name)}
           nameOptions={(drinkNames.data ?? []).map((o) => o.name)}
+          onAddType={(v) => addDrinkType.mutate(v)}
+          onAddCategory={(v) => addDrinkCategory.mutate(v)}
+          onAddBrand={(v) => addDrinkBrand.mutate(v)}
+          onAddName={(v) => addDrinkName.mutate(v)}
         />
       </Card>
       <Button type="submit">{id ? "Gem ændringer" : "Log kamp"}</Button>

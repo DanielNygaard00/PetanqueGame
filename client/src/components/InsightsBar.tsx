@@ -4,7 +4,6 @@ import { Card } from "../ui/Card";
 type Row = { key: string; games: number; winRate: number; avgMargin: number };
 
 export function InsightsBar({ title, rows }: { title: string; rows: Row[] }) {
-  const max = 100;
   return (
     <Card>
       <h3 className="mb-3 font-display text-lg">{title}</h3>
@@ -17,7 +16,7 @@ export function InsightsBar({ title, rows }: { title: string; rows: Row[] }) {
               <span className="text-ink/60">{r.winRate.toFixed(0)}% · {r.games} kampe · margin {r.avgMargin >= 0 ? "+" : ""}{r.avgMargin.toFixed(1)}</span>
             </div>
             <div className="mt-1 h-1.5 rounded-full bg-ink/10">
-              <div className="h-1.5 rounded-full bg-terracotta" style={{ width: `${(r.winRate / max) * 100}%` }} />
+              <div className="h-1.5 rounded-full bg-terracotta" style={{ width: `${r.winRate}%` }} />
             </div>
           </li>
         ))}

@@ -11,9 +11,13 @@ type Props = {
   categoryOptions?: string[];
   brandOptions?: string[];
   nameOptions?: string[];
+  onAddType?: (v: string) => void;
+  onAddCategory?: (v: string) => void;
+  onAddBrand?: (v: string) => void;
+  onAddName?: (v: string) => void;
 };
 
-export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [], brandOptions = [], nameOptions = [] }: Props) {
+export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [], brandOptions = [], nameOptions = [], onAddType, onAddCategory, onAddBrand, onAddName }: Props) {
   const update = (i: number, patch: Partial<Drink>) =>
     onChange(value.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
   const add = () => onChange([...value, { count: 1 }]);
@@ -27,10 +31,10 @@ export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [
             <span className="text-sm font-medium text-ink/70">Drik {i + 1}</span>
             <Button type="button" variant="ghost" onClick={() => remove(i)}>Fjern</Button>
           </div>
-          <SelectOrAdd label="Type" value={d.type ?? ""} options={typeOptions} onChange={(v) => update(i, v === "Vin" ? { type: v } : { type: v, wineRegion: undefined })} />
-          <SelectOrAdd label="Kategori" value={d.category ?? ""} options={categoryOptions} onChange={(v) => update(i, { category: v })} />
-          <SelectOrAdd label="Brand" value={d.brand ?? ""} options={brandOptions} onChange={(v) => update(i, { brand: v })} />
-          <SelectOrAdd label="Navn" value={d.name ?? ""} options={nameOptions} onChange={(v) => update(i, { name: v })} />
+          <SelectOrAdd label="Type" value={d.type ?? ""} options={typeOptions} onChange={(v) => update(i, v === "Vin" ? { type: v } : { type: v, wineRegion: undefined })} onAdd={onAddType} />
+          <SelectOrAdd label="Kategori" value={d.category ?? ""} options={categoryOptions} onChange={(v) => update(i, { category: v })} onAdd={onAddCategory} />
+          <SelectOrAdd label="Brand" value={d.brand ?? ""} options={brandOptions} onChange={(v) => update(i, { brand: v })} onAdd={onAddBrand} />
+          <SelectOrAdd label="Navn" value={d.name ?? ""} options={nameOptions} onChange={(v) => update(i, { name: v })} onAdd={onAddName} />
           {d.type === "Vin" && (
             <Input label="Region" value={d.wineRegion ?? ""} onChange={(e) => update(i, { wineRegion: e.target.value })} />
           )}
