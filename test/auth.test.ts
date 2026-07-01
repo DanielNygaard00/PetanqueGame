@@ -1,12 +1,7 @@
 // test/auth.test.ts
-import { env, applyD1Migrations } from "cloudflare:test";
-import { describe, it, expect, beforeAll, beforeEach, inject } from "vitest";
+import { env } from "cloudflare:test";
+import { describe, it, expect, beforeEach } from "vitest";
 import app from "../src/index";
-
-beforeAll(async () => {
-  const migrations = inject("d1Migrations");
-  await applyD1Migrations(env.DB, migrations);
-});
 
 async function post(path: string, body: unknown) {
   return app.request(path, {

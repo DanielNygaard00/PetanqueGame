@@ -14,6 +14,7 @@ export default defineWorkersConfig(async () => {
           singleWorker: true,
         },
       },
+      setupFiles: ["./test/apply-migrations.ts"],
       provide: {
         d1Migrations: migrations,
       },
