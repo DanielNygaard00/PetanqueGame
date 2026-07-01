@@ -5,12 +5,15 @@ import { Badge } from "../ui/Badge";
 import type { Match } from "../api/types";
 
 export function MatchCard({ m }: { m: Match }) {
+  const units = (m.drinks ?? []).reduce((s, d) => s + (d.count ?? 0), 0);
   return (
     <Card className="flex items-center justify-between">
       <div>
         <div className="font-display text-lg">{m.Spiller} <span className="text-ink/40">vs</span> {m.Modstander}</div>
-        <div className="text-sm text-ink/60">{m.Dato} · {m.Arena} · {m.Point} point</div>
-        {m.Drik_Navn && <div className="mt-1 text-sm text-bordeaux">🍷 {m.Drik_Navn}{m.Drik_Land ? ` (${m.Drik_Land})` : ""}</div>}
+        <div className="text-sm text-ink/60">
+          {m.Dato}{m.Tid ? ` ${m.Tid}` : ""} · {m.Arena} · {m.Point ?? "–"}{typeof m.Modstander_Point === "number" ? `–${m.Modstander_Point}` : ""}
+        </div>
+        {units > 0 && <div className="mt-1 text-sm text-bordeaux">🍹 {units} drik{units === 1 ? "" : "ke"}</div>}
       </div>
       <div className="flex items-center gap-2">
         {m.Gruppe_Bool && <Badge tone="group">Gruppe</Badge>}
