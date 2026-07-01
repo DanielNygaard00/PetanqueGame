@@ -2,12 +2,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMatches, useCreateMatch, useUpdateMatch, useOptions, useAddOption } from "../api/hooks";
-import { DrinkPicker } from "../components/DrinkPicker";
+import { DrinksEditor } from "../components/DrinksEditor";
 import { SelectOrAdd } from "../ui/SelectOrAdd";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
-import type { Match } from "../api/types";
+import type { Match, Drink } from "../api/types";
 
 export function MatchFormPage() {
   const { id } = useParams();
@@ -24,15 +24,30 @@ export function MatchFormPage() {
   const addArena = useAddOption("arenas");
   const addPlayer = useAddOption("players");
 
-  const [form, setForm] = useState<Partial<Match>>({ Vundet: false, Gruppe_Bool: false });
+  const [form, setForm] = useState<Partial<Match>>({ Vundet: false, Gruppe_Bool: false, drinks: [] as Drink[] });
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (id) { const m = matches.find((x) => x.id === id); if (m) setForm(m); }
   }, [id, matches]);
 
   const set = (patch: Partial<Match>) => setForm((f) => ({ ...f, ...patch }));
 
+  function validate(): string | null {
+    if (!form.Dato) return "Dato er påkrævet";
+    if (!form.Spiller) return "Spiller er påkrævet";
+    for (const k of ["Point", "Modstander_Point"] as const) {
+      const v = form[k];
+      if (v != null && (v < 0 || v > 50)) return "Point skal være mellem 0 og 50";
+    }
+    return null;
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    const err = validate();
+    if (err) { setError(err); return; }
+    setError(null);
     if (id) await update.mutateAsync({ id, ...form });
     else await create.mutateAsync(form);
     nav("/matches");
@@ -40,26 +55,32 @@ export function MatchFormPage() {
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      {error && <p className="text-red-600 text-sm">{error}</p>}
       <Card className="space-y-3">
         <Input label="Dato" type="date" value={form.Dato ?? ""} onChange={(e) => set({ Dato: e.target.value })} />
+        <Input label="Tid" type="time" value={form.Tid ?? ""} onChange={(e) => set({ Tid: e.target.value })} />
         <SelectOrAdd label="Spiller" value={form.Spiller ?? ""} options={(players.data ?? []).map((o) => o.name)} onChange={(v) => set({ Spiller: v })} onAdd={(v) => addPlayer.mutate(v)} />
         <SelectOrAdd label="Arena" value={form.Arena ?? ""} options={(arenas.data ?? []).map((o) => o.name)} onChange={(v) => set({ Arena: v })} onAdd={(v) => addArena.mutate(v)} />
         <Input label="Modstander" value={form.Modstander ?? ""} onChange={(e) => set({ Modstander: e.target.value })} />
         <Input label="Point" type="number" value={form.Point ?? ""} onChange={(e) => set({ Point: Number(e.target.value) })} />
+        <Input label="Modstander point" type="number" value={form.Modstander_Point ?? ""} onChange={(e) => set({ Modstander_Point: e.target.value === "" ? undefined : Number(e.target.value) })} />
         <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.Vundet} onChange={(e) => set({ Vundet: e.target.checked })} /> Vundet</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.Gruppe_Bool} onChange={(e) => set({ Gruppe_Bool: e.target.checked })} /> Gruppespil</label>
         {form.Gruppe_Bool && <Input label="Gruppemedlemmer" value={form.Gruppe_medlemmer ?? ""} onChange={(e) => set({ Gruppe_medlemmer: e.target.value })} />}
         <Input label="Konsekutive spil" type="number" value={form["Konsekutive spil"] ?? ""} onChange={(e) => set({ "Konsekutive spil": Number(e.target.value) })} />
         <Input label="Spillets genstande" value={form["Spillets genstande"] ?? ""} onChange={(e) => set({ "Spillets genstande": e.target.value })} />
       </Card>
-      <Card><DrinkPicker
-          value={form}
+      <Card>
+        <h3 className="mb-2 font-display text-lg">Drikkevarer i denne omgang</h3>
+        <DrinksEditor
+          value={form.drinks ?? []}
+          onChange={(drinks) => set({ drinks })}
           typeOptions={(drinkTypes.data ?? []).map((o) => o.name)}
           categoryOptions={(drinkCategories.data ?? []).map((o) => o.name)}
           brandOptions={(drinkBrands.data ?? []).map((o) => o.name)}
           nameOptions={(drinkNames.data ?? []).map((o) => o.name)}
-          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
-        /></Card>
+        />
+      </Card>
       <Button type="submit">{id ? "Gem ændringer" : "Log kamp"}</Button>
     </form>
   );
