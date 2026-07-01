@@ -27,7 +27,7 @@ export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [
             <span className="text-sm font-medium text-ink/70">Drik {i + 1}</span>
             <Button type="button" variant="ghost" onClick={() => remove(i)}>Fjern</Button>
           </div>
-          <SelectOrAdd label="Type" value={d.type ?? ""} options={typeOptions} onChange={(v) => update(i, d.type === "Vin" || v === "Vin" ? { type: v } : { type: v, wineRegion: "" })} />
+          <SelectOrAdd label="Type" value={d.type ?? ""} options={typeOptions} onChange={(v) => update(i, v === "Vin" ? { type: v } : { type: v, wineRegion: undefined })} />
           <SelectOrAdd label="Kategori" value={d.category ?? ""} options={categoryOptions} onChange={(v) => update(i, { category: v })} />
           <SelectOrAdd label="Brand" value={d.brand ?? ""} options={brandOptions} onChange={(v) => update(i, { brand: v })} />
           <SelectOrAdd label="Navn" value={d.name ?? ""} options={nameOptions} onChange={(v) => update(i, { name: v })} />
@@ -35,8 +35,8 @@ export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [
             <Input label="Region" value={d.wineRegion ?? ""} onChange={(e) => update(i, { wineRegion: e.target.value })} />
           )}
           <div className="flex gap-3">
-            <Input label="Antal" type="number" min={1} defaultValue={d.count ?? 1} onChange={(e) => update(i, { count: Number(e.target.value) })} className="w-24" />
-            <Input label="Volumen (cl)" type="number" defaultValue={d.volumeCl ?? ""} onChange={(e) => update(i, { volumeCl: e.target.value === "" ? null : Number(e.target.value) })} className="w-32" />
+            <Input label="Antal" type="number" min={1} value={d.count ?? 1} onChange={(e) => update(i, { count: Number(e.target.value) })} className="w-24" />
+            <Input label="Volumen (cl)" type="number" value={d.volumeCl ?? ""} onChange={(e) => update(i, { volumeCl: e.target.value === "" ? null : Number(e.target.value) })} className="w-32" />
           </div>
         </div>
       ))}

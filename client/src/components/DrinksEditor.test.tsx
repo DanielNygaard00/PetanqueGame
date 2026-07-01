@@ -1,4 +1,5 @@
 // client/src/components/DrinksEditor.test.tsx
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -23,7 +24,11 @@ describe("DrinksEditor", () => {
 
   it("edits count for a row", async () => {
     const onChange = vi.fn();
-    render(<DrinksEditor value={[{ type: "Øl", count: 1 }]} onChange={onChange} {...opts} />);
+    function Wrapper() {
+      const [drinks, setDrinks] = React.useState<any[]>([{ type: "Øl", count: 1 }]);
+      return <DrinksEditor value={drinks} onChange={(d) => { setDrinks(d); onChange(d); }} {...opts} />;
+    }
+    render(<Wrapper />);
     const countInput = screen.getByLabelText(/antal/i);
     await userEvent.clear(countInput);
     await userEvent.type(countInput, "3");
