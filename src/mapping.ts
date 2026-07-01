@@ -1,7 +1,7 @@
 // src/mapping.ts
-// Danish API key -> DB column. Booleans stored as 0/1.
 const KEY_TO_COL: Record<string, string> = {
   Dato: "date",
+  Tid: "time",
   Gruppe_Bool: "is_group",
   Gruppe_medlemmer: "group_members",
   "Konsekutive spil": "consecutive_games",
@@ -10,12 +10,7 @@ const KEY_TO_COL: Record<string, string> = {
   Modstander: "opponent",
   Vundet: "won",
   Point: "points",
-  Drik_Type: "drink_type",
-  Drik_Kategori: "drink_category",
-  Drik_Brand: "drink_brand",
-  Drik_Land: "drink_country",
-  Drik_Navn: "drink_name",
-  Vin_Region: "wine_region",
+  Modstander_Point: "opponent_points",
   "Spillets genstande": "game_items",
 };
 const COL_TO_KEY: Record<string, string> = Object.fromEntries(
@@ -23,7 +18,7 @@ const COL_TO_KEY: Record<string, string> = Object.fromEntries(
 );
 const BOOL_COLS = new Set(["is_group", "won"]);
 
-export const MATCH_COLUMNS = Object.keys(KEY_TO_COL); // 16 keys in insertion order
+export const MATCH_COLUMNS = Object.keys(KEY_TO_COL);
 
 export function toRow(body: Record<string, unknown>): Record<string, unknown> {
   const row: Record<string, unknown> = {};
