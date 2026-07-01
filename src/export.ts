@@ -4,6 +4,8 @@ import type { AppContext } from "./types";
 import { MATCH_COLUMNS, toApi } from "./mapping";
 import { toCsv } from "./csv";
 
+const CSV_BOOL_KEYS = new Set(["Gruppe_Bool", "Vundet"]);
+
 const exportRoute = new Hono<AppContext>();
 
 exportRoute.get("/", async (c) => {
@@ -12,6 +14,7 @@ exportRoute.get("/", async (c) => {
     const api = toApi(r as Record<string, unknown>);
     return MATCH_COLUMNS.map((col) => {
       const v = api[col];
+      if (CSV_BOOL_KEYS.has(col)) return v ? "1" : "";
       return v === undefined || v === null ? "" : String(v);
     });
   });

@@ -29,4 +29,37 @@ describe("export", () => {
     expect(text).toContain("Dato,");
     expect(text).toContain("Spillets genstande");
   });
+
+  it("renders Vundet as 1 for won and empty string for lost (legacy CSV format)", async () => {
+    // POST a won match (2026-07-01) and a lost match (2026-07-02)
+    await app.request("/api/matches", {
+      method: "POST",
+      headers: { authorization: auth, "content-type": "application/json" },
+      body: JSON.stringify({ Dato: "2026-07-01", Spiller: "Ida", Vundet: true, Point: 13 }),
+    }, env);
+    await app.request("/api/matches", {
+      method: "POST",
+      headers: { authorization: auth, "content-type": "application/json" },
+      body: JSON.stringify({ Dato: "2026-07-02", Spiller: "Ida", Vundet: false, Point: 7 }),
+    }, env);
+
+    const res = await app.request("/api/export", { headers: { authorization: auth } }, env);
+    const raw = await res.text();
+
+    // Strip BOM, split on CRLF, drop empty trailing lines
+    const text = raw.startsWith("﻿") ? raw.slice(1) : raw;
+    const lines = text.split("\r\n").filter((l) => l.length > 0);
+
+    // Find Vundet column index from header row
+    const headers = lines[0].split(",");
+    const vundedIdx = headers.indexOf("Vundet");
+    expect(vundedIdx).toBeGreaterThanOrEqual(0);
+
+    // export orders by date ASC: won match is row 0, lost match is row 1
+    const wonRow = lines[1].split(",");
+    const lostRow = lines[2].split(",");
+
+    expect(wonRow[vundedIdx]).toBe("1");
+    expect(lostRow[vundedIdx]).toBe("");
+  });
 });
