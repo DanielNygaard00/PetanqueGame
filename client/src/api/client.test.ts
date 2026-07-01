@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { api, setToken, getToken, TOKEN_KEY } from "./client";
+import { api, setToken, TOKEN_KEY } from "./client";
 
 describe("api client", () => {
   beforeEach(() => localStorage.clear());
