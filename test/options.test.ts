@@ -37,6 +37,18 @@ describe("options", () => {
     expect(list).toHaveLength(1);
   });
 
+  it("dedupes Danish/accented names across case", async () => {
+    const a = await (await app.request("/api/options/drink_types", {
+      method: "POST", headers: H(), body: JSON.stringify({ name: "Øl" }),
+    }, env)).json();
+    const b = await (await app.request("/api/options/drink_types", {
+      method: "POST", headers: H(), body: JSON.stringify({ name: "øl" }),
+    }, env)).json();
+    expect(b.id).toBe(a.id);
+    const list = await (await app.request("/api/options/drink_types", { headers: H() }, env)).json();
+    expect(list).toHaveLength(1);
+  });
+
   it("returns the drink hierarchy shape", async () => {
     await app.request("/api/options/drink_types", {
       method: "POST", headers: H(), body: JSON.stringify({ name: "Vin" }),

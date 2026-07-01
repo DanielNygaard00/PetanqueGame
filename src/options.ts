@@ -32,10 +32,13 @@ options.post("/:collection", async (c) => {
   const name = typeof raw === "string" ? raw.trim() : "";
   if (!name) return c.json({ message: "Name required" }, 400);
 
-  const existing = await c.env.DB.prepare(
-    "SELECT id, name FROM options WHERE collection = ? AND lower(name) = lower(?)",
-  ).bind(collection, name).first<{ id: string; name: string }>();
-  if (existing) return c.json(existing, 200);
+  const key = name.toLowerCase(); // Unicode-aware in JS
+  const { results } = await c.env.DB.prepare(
+    "SELECT id, name FROM options WHERE collection = ?",
+  ).bind(collection).all();
+  const existing = (results as { id: string; name: string }[])
+    .find((r) => r.name.toLowerCase() === key);
+  if (existing) return c.json({ id: existing.id, name: existing.name }, 200);
 
   const id = crypto.randomUUID();
   await c.env.DB.prepare(
