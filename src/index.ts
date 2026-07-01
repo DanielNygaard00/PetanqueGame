@@ -34,6 +34,8 @@ app.route("/api/options", options);
 app.use("/api/export", guard);
 app.route("/api/export", exportRoute);
 
+app.all("/api/*", (c) => c.json({ message: "Not found" }, 404));
+
 // Pass non-API routes through to the ASSETS binding so the SPA handles them.
 app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 

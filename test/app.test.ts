@@ -16,6 +16,12 @@ describe("app wiring", () => {
     const res = await app.request("/api/matches", {}, env);
     expect(res.status).toBe(401);
   });
+  it("returns JSON 404 for unknown /api/* paths", async () => {
+    const res = await app.request("/api/does-not-exist", {}, env);
+    expect(res.status).toBe(404);
+    expect(res.headers.get("content-type")).toMatch(/application\/json/);
+    expect(await res.json()).toEqual({ message: "Not found" });
+  });
   it("returns 500 JSON for unhandled errors (e.g. PUT to unknown match id)", async () => {
     // Sign up to get a valid token
     const signupRes = await app.request("/api/auth/signup", {

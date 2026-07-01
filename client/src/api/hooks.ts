@@ -1,7 +1,7 @@
 // client/src/api/hooks.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { Match, Option, DrinkHierarchy } from "./types";
+import type { Match, Option } from "./types";
 
 export function useMatches() {
   return useQuery({ queryKey: ["matches"], queryFn: async () => (await api.get<Match[]>("/matches")).data });
@@ -38,11 +38,5 @@ export function useAddOption(collection: string) {
   return useMutation({
     mutationFn: async (name: string) => (await api.post<Option>(`/options/${collection}`, { name })).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["options", collection] }),
-  });
-}
-export function useDrinkHierarchy() {
-  return useQuery({
-    queryKey: ["drinkHierarchy"],
-    queryFn: async () => (await api.get<DrinkHierarchy>("/options/drinks/hierarchy")).data,
   });
 }

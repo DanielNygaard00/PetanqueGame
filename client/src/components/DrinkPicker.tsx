@@ -17,7 +17,7 @@ export function DrinkPicker({ value, typeOptions, categoryOptions = [], brandOpt
   const isWine = value.Drik_Type === "Vin";
   return (
     <div className="space-y-3">
-      <SelectOrAdd label="Drik type" value={value.Drik_Type ?? ""} options={typeOptions} onChange={(v) => set({ Drik_Type: v })} />
+      <SelectOrAdd label="Drik type" value={value.Drik_Type ?? ""} options={typeOptions} onChange={(v) => set(v === "Vin" ? { Drik_Type: v } : { Drik_Type: v, Vin_Region: "" })} />
       <SelectOrAdd label="Kategori" value={value.Drik_Kategori ?? ""} options={categoryOptions} onChange={(v) => set({ Drik_Kategori: v })} />
       <SelectOrAdd label="Brand" value={value.Drik_Brand ?? ""} options={brandOptions} onChange={(v) => set({ Drik_Brand: v })} />
       <SelectOrAdd label="Navn" value={value.Drik_Navn ?? ""} options={nameOptions} onChange={(v) => set({ Drik_Navn: v })} />

@@ -20,4 +20,14 @@ describe("DrinkPicker", () => {
     await userEvent.click(screen.getByText("Øl"));
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ Drik_Type: "Øl" }));
   });
+
+  it("clears Vin_Region when type changes away from Vin", async () => {
+    const onChange = vi.fn();
+    render(<DrinkPicker value={{ Drik_Type: "Vin", Vin_Region: "Bordeaux" }} typeOptions={opts} onChange={onChange} />);
+    // Clear the type input so all option chips become visible, then click Øl
+    const typeInput = screen.getByDisplayValue("Vin");
+    await userEvent.clear(typeInput);
+    await userEvent.click(screen.getByText("Øl"));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ Drik_Type: "Øl", Vin_Region: "" }));
+  });
 });
