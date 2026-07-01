@@ -1,5 +1,5 @@
 // client/src/ui/SelectOrAdd.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./Input";
 import { Button } from "./Button";
 
@@ -13,6 +13,9 @@ type Props = {
 
 export function SelectOrAdd({ label, value, options, onChange, onAdd }: Props) {
   const [query, setQuery] = useState(value);
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
   const trimmed = query.trim();
   const matches = trimmed
     ? options.filter((o) => o.toLowerCase().includes(trimmed.toLowerCase()))

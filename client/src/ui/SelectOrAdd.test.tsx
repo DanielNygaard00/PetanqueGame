@@ -21,4 +21,11 @@ describe("SelectOrAdd", () => {
     expect(onAdd).toHaveBeenCalledWith("Nyhavn");
     expect(onChange).toHaveBeenCalledWith("Nyhavn");
   });
+
+  it("reflects a value prop that arrives after mount (edit prefill)", () => {
+    const { rerender } = render(<SelectOrAdd label="Spiller" value="" options={["Ida", "Bo"]} onChange={() => {}} />);
+    expect(screen.getByRole("textbox")).toHaveValue("");
+    rerender(<SelectOrAdd label="Spiller" value="Ida" options={["Ida", "Bo"]} onChange={() => {}} />);
+    expect(screen.getByRole("textbox")).toHaveValue("Ida");
+  });
 });
