@@ -6,3 +6,6 @@ node_modules
 
 # Cloudflare Wrangler local state (local D1, build cache)
 .wrangler/
+
+# Wrangler local dev secrets
+.dev.vars

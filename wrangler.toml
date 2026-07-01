@@ -3,13 +3,13 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-[vars]
-JWT_SECRET = "dev-only-change-in-production"
+# JWT_SECRET is NOT set here — it is a Worker secret in production
+# (`wrangler secret put JWT_SECRET`) and comes from .dev.vars locally.
 
 [[d1_databases]]
 binding = "DB"
 database_name = "petanque"
-database_id = "PLACEHOLDER_SET_AFTER_d1_create"
+database_id = "b617e902-f574-422e-87c3-b0cc00419fd7"
 
 [assets]
 directory = "client/dist"
