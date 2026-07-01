@@ -34,6 +34,9 @@ app.route("/api/options", options);
 app.use("/api/export", guard);
 app.route("/api/export", exportRoute);
 
+// Pass non-API routes through to the ASSETS binding so the SPA handles them.
+app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
+
 app.onError((err, c) => {
   console.error(err);
   return c.json({ message: "Internal server error" }, 500);
