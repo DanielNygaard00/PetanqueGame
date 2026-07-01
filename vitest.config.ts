@@ -4,6 +4,7 @@ export default defineWorkersConfig(async () => {
   const migrations = await readD1Migrations("migrations");
   return {
     test: {
+      include: ["test/**/*.test.ts"],
       poolOptions: {
         workers: {
           wrangler: { configPath: "./wrangler.toml" },

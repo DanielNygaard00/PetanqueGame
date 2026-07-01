@@ -8,7 +8,8 @@ Cloudflare Worker (Hono) API + D1 (SQLite), serving a Vite/React SPA.
 npm install
 npm run db:migrate:local        # applies migrations to a local SQLite D1
 npm run dev                     # wrangler dev on http://localhost:8787
-npm test                        # vitest (Workers pool)
+npm test                        # backend (Workers pool) tests — test/**/*.test.ts only
+cd client && npm test           # frontend (jsdom) tests — client/src/**/*.test.tsx
 ```
 
 ## First-time Cloudflare setup
