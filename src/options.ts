@@ -27,11 +27,20 @@ options.get("/:collection", async (c) => {
 });
 
 options.post("/:collection", async (c) => {
-  const { name } = await c.req.json().catch(() => ({}));
+  const collection = c.req.param("collection");
+  const raw = (await c.req.json().catch(() => ({}))).name;
+  const name = typeof raw === "string" ? raw.trim() : "";
+  if (!name) return c.json({ message: "Name required" }, 400);
+
+  const existing = await c.env.DB.prepare(
+    "SELECT id, name FROM options WHERE collection = ? AND lower(name) = lower(?)",
+  ).bind(collection, name).first<{ id: string; name: string }>();
+  if (existing) return c.json(existing, 200);
+
   const id = crypto.randomUUID();
   await c.env.DB.prepare(
     "INSERT INTO options (id, collection, name, created_at) VALUES (?, ?, ?, ?)",
-  ).bind(id, c.req.param("collection"), name, new Date().toISOString()).run();
+  ).bind(id, collection, name, new Date().toISOString()).run();
   return c.json({ id, name }, 201);
 });
 

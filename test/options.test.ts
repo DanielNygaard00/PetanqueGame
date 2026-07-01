@@ -25,6 +25,18 @@ describe("options", () => {
     expect((await list.json())[0].name).toBe("Kongens Have");
   });
 
+  it("does not create case/whitespace duplicates", async () => {
+    const a = await (await app.request("/api/options/arenas", {
+      method: "POST", headers: H(), body: JSON.stringify({ name: "Kongens Have" }),
+    }, env)).json();
+    const b = await (await app.request("/api/options/arenas", {
+      method: "POST", headers: H(), body: JSON.stringify({ name: "  kongens have " }),
+    }, env)).json();
+    expect(b.id).toBe(a.id);
+    const list = await (await app.request("/api/options/arenas", { headers: H() }, env)).json();
+    expect(list).toHaveLength(1);
+  });
+
   it("returns the drink hierarchy shape", async () => {
     await app.request("/api/options/drink_types", {
       method: "POST", headers: H(), body: JSON.stringify({ name: "Vin" }),
