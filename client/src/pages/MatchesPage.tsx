@@ -16,6 +16,7 @@ export function MatchesPage() {
 
   async function exportCsv() {
     const res = await fetch("/api/export", { headers: { Authorization: `Bearer ${getToken()}` } });
+    if (!res.ok) { alert("Kunne ikke eksportere data"); return; }
     const url = URL.createObjectURL(await res.blob());
     const a = document.createElement("a");
     a.href = url; a.download = "petanque_data.csv"; a.click();

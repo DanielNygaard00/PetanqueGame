@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function DrinkPicker({ value, typeOptions, categoryOptions = [], brandOptions = [], nameOptions = [], onChange }: Props) {
-  const set = (patch: Partial<Match>) => onChange({ ...value, ...patch });
+  const set = (patch: Partial<Match>) => onChange(patch);
   const isWine = value.Drik_Type === "Vin";
   return (
     <div className="space-y-3">

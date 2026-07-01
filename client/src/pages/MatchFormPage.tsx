@@ -18,6 +18,9 @@ export function MatchFormPage() {
   const players = useOptions("players");
   const arenas = useOptions("arenas");
   const drinkTypes = useOptions("drink_types");
+  const drinkCategories = useOptions("drink_categories");
+  const drinkBrands = useOptions("drink_brands");
+  const drinkNames = useOptions("drink_names");
   const addArena = useAddOption("arenas");
   const addPlayer = useAddOption("players");
 
@@ -49,7 +52,14 @@ export function MatchFormPage() {
         <Input label="Konsekutive spil" type="number" value={form["Konsekutive spil"] ?? ""} onChange={(e) => set({ "Konsekutive spil": Number(e.target.value) })} />
         <Input label="Spillets genstande" value={form["Spillets genstande"] ?? ""} onChange={(e) => set({ "Spillets genstande": e.target.value })} />
       </Card>
-      <Card><DrinkPicker value={form} typeOptions={(drinkTypes.data ?? []).map((o) => o.name)} onChange={(patch) => setForm(patch)} /></Card>
+      <Card><DrinkPicker
+          value={form}
+          typeOptions={(drinkTypes.data ?? []).map((o) => o.name)}
+          categoryOptions={(drinkCategories.data ?? []).map((o) => o.name)}
+          brandOptions={(drinkBrands.data ?? []).map((o) => o.name)}
+          nameOptions={(drinkNames.data ?? []).map((o) => o.name)}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+        /></Card>
       <Button type="submit">{id ? "Gem ændringer" : "Log kamp"}</Button>
     </form>
   );
