@@ -91,6 +91,14 @@ The API continues to accept and return the Danish field keys. Internally these m
 clean snake_case columns; the mapping is applied at the controller boundary so the
 wire contract and CSV headers stay byte-identical.
 
+**Boolean contract (clarified during implementation):** the two boolean fields
+`Vundet` and `Gruppe_Bool` are stored as `INTEGER NOT NULL DEFAULT 0` and are therefore
+always present in JSON responses as real booleans (`true`/`false`) — the new frontend is
+built against this shape. The **CSV export** renders these two columns as `1` (true) or
+empty string (false), matching the legacy `csv-stringify` output, so downloaded
+spreadsheets stay compatible. There is no data migration (D1 starts empty), so no legacy
+consumer is affected.
+
 ### Data model (D1 / SQLite)
 
 Three tables replace the Firestore collections.
