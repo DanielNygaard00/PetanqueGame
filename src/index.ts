@@ -5,6 +5,7 @@ import { guard } from "./guard";
 import users from "./users";
 import matches from "./matches";
 import options from "./options";
+import exportRoute from "./export";
 
 const app = new Hono();
 
@@ -19,5 +20,7 @@ app.route("/api/matches", matches);
 app.use("/api/options", guard);
 app.use("/api/options/*", guard);
 app.route("/api/options", options);
+app.use("/api/export", guard);
+app.route("/api/export", exportRoute);
 
 export default app;
