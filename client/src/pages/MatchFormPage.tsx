@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMatches, useCreateMatch, useUpdateMatch, useOptions, useAddOption, usePlayers, useAddPlayer } from "../api/hooks";
+import { ymd } from "../stats/dateRange";
 import { DrinksEditor } from "../components/DrinksEditor";
 import { SelectOrAdd } from "../ui/SelectOrAdd";
 import { Input } from "../ui/Input";
@@ -41,7 +42,7 @@ export function MatchFormPage() {
   useEffect(() => {
     if (id) return; // edit mode handled elsewhere
     const nowHM = new Date().toTimeString().slice(0, 5);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = ymd(new Date());
     setForm((f) => ({
       ...f,
       Dato: f.Dato ?? today,
