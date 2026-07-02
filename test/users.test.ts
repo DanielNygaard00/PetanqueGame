@@ -6,7 +6,7 @@ import app from "../src/index";
 async function token(username = "ida") {
   const res = await app.request("/api/auth/signup", {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ username }),
+    body: JSON.stringify({ username, code: "test-code" }),
   }, env);
   return (await res.json()).token as string;
 }

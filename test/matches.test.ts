@@ -10,7 +10,7 @@ beforeEach(async () => {
   await env.DB.exec("DELETE FROM users");
   const res = await app.request("/api/auth/signup", {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ username: "ida" }),
+    body: JSON.stringify({ username: "ida", code: "test-code" }),
   }, env);
   auth = `Bearer ${(await res.json()).token}`;
 });

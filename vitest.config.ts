@@ -10,7 +10,7 @@ export default defineWorkersConfig(async () => {
           wrangler: { configPath: "./wrangler.toml" },
           miniflare: {
             d1Databases: ["DB"],
-            bindings: { JWT_SECRET: "test-secret" },
+            bindings: { JWT_SECRET: "test-secret", SIGNUP_CODE: "test-code" },
           },
           singleWorker: true,
         },

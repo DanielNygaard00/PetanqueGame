@@ -7,7 +7,10 @@ import type { AppContext } from "./types";
 const auth = new Hono<AppContext>();
 
 auth.post("/signup", async (c) => {
-  const { username, password, email } = await c.req.json().catch(() => ({}));
+  const { username, password, email, code } = await c.req.json().catch(() => ({}));
+  if (!c.env.SIGNUP_CODE || code !== c.env.SIGNUP_CODE) {
+    return c.json({ message: "Invalid signup code" }, 403);
+  }
   if (!username) return c.json({ message: "Username required" }, 400);
 
   const existing = await c.env.DB.prepare("SELECT id FROM users WHERE username = ?")

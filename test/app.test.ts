@@ -27,7 +27,7 @@ describe("app wiring", () => {
     const signupRes = await app.request("/api/auth/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ username: "errtest_user", password: "pw" }),
+      body: JSON.stringify({ username: "errtest_user", password: "pw", code: "test-code" }),
     }, env);
     const { token } = await signupRes.json();
 
