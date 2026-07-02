@@ -11,12 +11,13 @@ export function SignupPage() {
   const [username, setU] = useState("");
   const [password, setP] = useState("");
   const [email, setE] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    try { await signup(username, password, email); nav("/"); }
+    try { await signup(username, password, email, code); nav("/"); }
     catch (err: any) { setError(err?.response?.data?.message ?? "Kunne ikke oprette bruger"); }
   }
 
@@ -26,6 +27,7 @@ export function SignupPage() {
         <Input label="Brugernavn" value={username} onChange={(e) => setU(e.target.value)} />
         <Input label="Email (valgfri)" value={email} onChange={(e) => setE(e.target.value)} />
         <Input label="Adgangskode (valgfri)" type="password" value={password} onChange={(e) => setP(e.target.value)} />
+        <Input label="Tilmeldingskode" value={code} onChange={(e) => setCode(e.target.value)} />
         {error && <p className="text-sm text-bordeaux">{error}</p>}
         <Button type="submit" className="w-full">Opret</Button>
         <p className="text-sm text-ink/60">Har du en bruger? <Link className="text-terracotta" to="/login">Log ind</Link></p>

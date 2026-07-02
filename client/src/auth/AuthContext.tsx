@@ -9,7 +9,7 @@ type AuthValue = {
   user: User;
   isAuthenticated: boolean;
   login: (username: string, password?: string) => Promise<void>;
-  signup: (username: string, password?: string, email?: string) => Promise<void>;
+  signup: (username: string, password?: string, email?: string, code?: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isAuthenticated: !!user || !!getToken(),
     login: (username, password) => authenticate("/auth/login", { username, password }),
-    signup: (username, password, email) => authenticate("/auth/signup", { username, password, email }),
+    signup: (username, password, email, code) => authenticate("/auth/signup", { username, password, email, code }),
     logout: () => { clearToken(); setUser(null); },
   };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
