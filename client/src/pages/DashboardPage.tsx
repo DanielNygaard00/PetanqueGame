@@ -8,10 +8,14 @@ import {
 } from "recharts";
 import { useMatches } from "../api/hooks";
 import { deriveStats } from "../stats/derive";
+import { filterByRange, type RangePreset } from "../stats/dateRange";
+import { deriveInsights } from "../stats/insights";
+import { headToHead } from "../stats/headToHead";
 import { StatCard } from "../ui/StatCard";
 import { Card } from "../ui/Card";
 import { MatchCard } from "../components/MatchCard";
 import { InsightsBar } from "../components/InsightsBar";
+import { InsightChips } from "../components/InsightChips";
 
 const TIME_LABELS: Record<string, string> = { morning: "Morgen (5–11)", afternoon: "Eftermiddag (12–16)", evening: "Aften (17–21)", night: "Nat (22–4)", unknown: "Ukendt tid" };
 
@@ -19,19 +23,29 @@ export function DashboardPage() {
   const { data = [], isLoading } = useMatches();
 
   const [player, setPlayer] = useState("Alle");
+  const [range, setRange] = useState<RangePreset>("all");
+
   const players = useMemo(
     () => ["Alle", ...Array.from(new Set(data.map((m) => (m.Spiller ?? "").trim()).filter(Boolean)))],
     [data],
   );
-  const filtered = player === "Alle" ? data : data.filter((m) => (m.Spiller ?? "").trim() === player);
-  const s = deriveStats(filtered);
+
+  const filtered = useMemo(
+    () => player === "Alle" ? data : data.filter((m) => (m.Spiller ?? "").trim() === player),
+    [data, player],
+  );
+
+  const scoped = useMemo(() => filterByRange(filtered, range, new Date()), [filtered, range]);
+  const s = deriveStats(scoped);
+  const insights = useMemo(() => deriveInsights(scoped), [scoped]);
+  const h2h = useMemo(() => (player === "Alle" ? [] : headToHead(scoped, player)), [scoped, player]);
 
   if (isLoading) return <p>Henter…</p>;
 
   return (
     <div className="space-y-6">
-      {/* Player filter */}
-      <div className="flex items-center gap-3">
+      {/* Filters: player + date range */}
+      <div className="flex flex-wrap items-center gap-3">
         <label htmlFor="player-filter" className="text-sm font-medium text-ink/70">
           Spiller
         </label>
@@ -39,13 +53,30 @@ export function DashboardPage() {
           id="player-filter"
           value={player}
           onChange={(e) => setPlayer(e.target.value)}
-          className="rounded-card border border-ink/10 bg-white/70 px-3 py-1.5 text-sm text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          className="w-full rounded-card border border-ink/10 bg-white/70 px-3 py-1.5 text-sm text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-terracotta/40 sm:w-auto"
         >
           {players.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
+
+        <label htmlFor="range-filter" className="text-sm font-medium text-ink/70">
+          Periode
+        </label>
+        <select
+          id="range-filter"
+          value={range}
+          onChange={(e) => setRange(e.target.value as RangePreset)}
+          className="w-full rounded-card border border-ink/10 bg-white/70 px-3 py-1.5 text-sm text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-terracotta/40 sm:w-auto"
+        >
+          <option value="all">Alt</option>
+          <option value="year">I år</option>
+          <option value="30d">Seneste 30 dage</option>
+        </select>
       </div>
+
+      {/* Insight chips */}
+      <InsightChips items={insights} />
 
       {/* v1 stat cards + totalDrinks */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
@@ -55,6 +86,49 @@ export function DashboardPage() {
         <StatCard label="Kampe" value={s.total} />
         <StatCard label="Drikke i alt" value={s.totalDrinks} hint="enheder" />
       </div>
+
+      {/* Head-to-head (only when specific player is selected and h2h has rows) */}
+      {player !== "Alle" && h2h.length > 0 && (
+        <Card>
+          <h3 className="mb-3 text-lg">Head-to-head</h3>
+
+          {/* Desktop table */}
+          <table className="hidden w-full text-sm md:table">
+            <thead>
+              <tr className="text-left text-ink/50">
+                <th className="pb-1 font-normal">Modstander</th>
+                <th className="pb-1 font-normal text-right">V–T</th>
+                <th className="pb-1 font-normal text-right">Sejrsrate</th>
+                <th className="pb-1 font-normal text-right">Avg margin</th>
+              </tr>
+            </thead>
+            <tbody>
+              {h2h.map((row) => (
+                <tr key={row.opponent} className="border-t border-ink/5">
+                  <td className="py-1">{row.opponent}</td>
+                  <td className="py-1 text-right">{row.wins}–{row.losses}</td>
+                  <td className="py-1 text-right">{row.winRate.toFixed(0)}%</td>
+                  <td className="py-1 text-right">{row.avgMargin >= 0 ? "+" : ""}{row.avgMargin.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Mobile card list */}
+          <div className="space-y-2 md:hidden">
+            {h2h.map((row) => (
+              <div key={row.opponent} className="rounded-card border border-ink/10 bg-white/60 px-4 py-3">
+                <div className="font-medium">{row.opponent}</div>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-ink/70">
+                  <span>V–T: {row.wins}–{row.losses}</span>
+                  <span>Sejrsrate: {row.winRate.toFixed(0)}%</span>
+                  <span>Margin: {row.avgMargin >= 0 ? "+" : ""}{row.avgMargin.toFixed(1)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Points over time */}
       <Card>
@@ -174,7 +248,7 @@ export function DashboardPage() {
           <Link to="/matches" className="text-sm text-terracotta">Se alle</Link>
         </div>
         <div className="space-y-3">
-          {filtered.slice(0, 5).map((m) => <MatchCard key={m.id} m={m} />)}
+          {scoped.slice(0, 5).map((m) => <MatchCard key={m.id} m={m} />)}
         </div>
       </div>
     </div>
