@@ -14,6 +14,7 @@ export function Layout() {
           <Link to="/" className="hover:text-terracotta">Oversigt</Link>
           <Link to="/matches" className="hover:text-terracotta">Kampe</Link>
           <Link to="/rankings" className="hover:text-terracotta">Rangliste</Link>
+          <Link to="/roster" className="hover:text-terracotta">Spillere</Link>
           <Link to="/matches/new"><Button>Log kamp</Button></Link>
           <Button variant="ghost" onClick={() => { logout(); nav("/login"); }}>Log ud</Button>
         </nav>

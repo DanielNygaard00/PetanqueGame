@@ -10,6 +10,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MatchesPage } from "./pages/MatchesPage";
 import { MatchFormPage } from "./pages/MatchFormPage";
 import { RankingsPage } from "./pages/RankingsPage";
+import { RosterPage } from "./pages/RosterPage";
 
 const qc = new QueryClient();
 
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/matches/new" element={<MatchFormPage />} />
               <Route path="/matches/:id/edit" element={<MatchFormPage />} />
               <Route path="/rankings" element={<RankingsPage />} />
+              <Route path="/roster" element={<RosterPage />} />
             </Route>
           </Routes>
         </BrowserRouter>
