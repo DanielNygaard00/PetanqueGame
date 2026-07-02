@@ -18,7 +18,7 @@ export function SignupPage() {
     e.preventDefault();
     setError("");
     try { await signup(username, password, email, code); nav("/"); }
-    catch (err: any) { setError(err?.response?.data?.message ?? "Kunne ikke oprette bruger"); }
+    catch (err: any) { setError(err?.response?.status === 403 ? "Forkert tilmeldingskode" : (err?.response?.data?.message ?? "Kunne ikke oprette bruger")); }
   }
 
   return (

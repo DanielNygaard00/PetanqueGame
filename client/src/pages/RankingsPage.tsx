@@ -1,4 +1,5 @@
 // client/src/pages/RankingsPage.tsx
+import { useMemo } from "react";
 import { useMatches } from "../api/hooks";
 import { computeElo } from "../stats/elo";
 import { Card } from "../ui/Card";
@@ -7,7 +8,7 @@ import { Badge } from "../ui/Badge";
 export function RankingsPage() {
   const { data = [], isLoading } = useMatches();
   if (isLoading) return <p>Henter…</p>;
-  const ratings = computeElo(data);
+  const ratings = useMemo(() => computeElo(data), [data]);
   return (
     <div className="space-y-4">
       <h2 className="font-display text-2xl">Rangliste</h2>

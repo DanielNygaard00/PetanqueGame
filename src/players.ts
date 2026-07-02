@@ -39,15 +39,21 @@ players.patch("/:id", async (c) => {
   const player = await c.env.DB.prepare("SELECT id, name FROM players WHERE id = ?").bind(id).first<{ id: string; name: string }>();
   if (!player) return c.json({ message: "Not found" }, 404);
   const oldName = player.name;
-  await c.env.DB.prepare("UPDATE matches SET player = ? WHERE player = ?").bind(newName, oldName).run();
-  await c.env.DB.prepare("UPDATE matches SET opponent = ? WHERE opponent = ?").bind(newName, oldName).run();
   const { results } = await c.env.DB.prepare("SELECT id, name FROM players").all();
   const target = (results as { id: string; name: string }[]).find((r) => r.name.toLowerCase() === newName.toLowerCase() && r.id !== id);
   if (target) {
-    await c.env.DB.prepare("DELETE FROM players WHERE id = ?").bind(id).run();
+    await c.env.DB.batch([
+      c.env.DB.prepare("UPDATE matches SET player = ? WHERE player = ?").bind(newName, oldName),
+      c.env.DB.prepare("UPDATE matches SET opponent = ? WHERE opponent = ?").bind(newName, oldName),
+      c.env.DB.prepare("DELETE FROM players WHERE id = ?").bind(id),
+    ]);
     return c.json({ id: target.id, name: target.name });
   }
-  await c.env.DB.prepare("UPDATE players SET name = ? WHERE id = ?").bind(newName, id).run();
+  await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE matches SET player = ? WHERE player = ?").bind(newName, oldName),
+    c.env.DB.prepare("UPDATE matches SET opponent = ? WHERE opponent = ?").bind(newName, oldName),
+    c.env.DB.prepare("UPDATE players SET name = ? WHERE id = ?").bind(newName, id),
+  ]);
   return c.json({ id, name: newName });
 });
 
@@ -57,9 +63,11 @@ players.post("/:id/merge", async (c) => {
   const source = await c.env.DB.prepare("SELECT id, name FROM players WHERE id = ?").bind(id).first<{ id: string; name: string }>();
   const target = await c.env.DB.prepare("SELECT id, name FROM players WHERE id = ?").bind(intoId).first<{ id: string; name: string }>();
   if (!source || !target) return c.json({ message: "Not found" }, 404);
-  await c.env.DB.prepare("UPDATE matches SET player = ? WHERE player = ?").bind(target.name, source.name).run();
-  await c.env.DB.prepare("UPDATE matches SET opponent = ? WHERE opponent = ?").bind(target.name, source.name).run();
-  await c.env.DB.prepare("DELETE FROM players WHERE id = ?").bind(source.id).run();
+  await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE matches SET player = ? WHERE player = ?").bind(target.name, source.name),
+    c.env.DB.prepare("UPDATE matches SET opponent = ? WHERE opponent = ?").bind(target.name, source.name),
+    c.env.DB.prepare("DELETE FROM players WHERE id = ?").bind(source.id),
+  ]);
   return c.json({ id: target.id, name: target.name });
 });
 
