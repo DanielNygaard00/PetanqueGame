@@ -26,9 +26,9 @@ export function MatchesPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
-        <Input label="Søg" value={q} onChange={(e) => setQ(e.target.value)} className="w-64" />
+        <Input label="Søg" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-64" />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={onlyWins} onChange={(e) => setOnlyWins(e.target.checked)} /> Kun sejre</label>
-        <div className="ml-auto"><Button variant="ghost" onClick={exportCsv}>Eksportér CSV</Button></div>
+        <div className="ml-auto w-full sm:w-auto"><Button variant="ghost" className="w-full sm:w-auto" onClick={exportCsv}>Eksportér CSV</Button></div>
       </div>
       {isLoading ? <p>Henter…</p> : <div className="space-y-3">{filtered.map((m) => <MatchCard key={m.id} m={m} />)}</div>}
     </div>

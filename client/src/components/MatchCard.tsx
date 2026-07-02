@@ -7,7 +7,7 @@ import type { Match } from "../api/types";
 export function MatchCard({ m }: { m: Match }) {
   const units = (m.drinks ?? []).reduce((s, d) => s + (d.count ?? 0), 0);
   return (
-    <Card className="flex items-center justify-between">
+    <Card className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <div className="font-display text-lg">{m.Spiller} <span className="text-ink/40">vs</span> {m.Modstander}</div>
         <div className="text-sm text-ink/60">

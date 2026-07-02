@@ -38,9 +38,9 @@ export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [
           {d.type === "Vin" && (
             <Input label="Region" value={d.wineRegion ?? ""} onChange={(e) => update(i, { wineRegion: e.target.value })} />
           )}
-          <div className="flex gap-3">
-            <Input label="Antal" type="number" min={1} value={d.count ?? 1} onChange={(e) => update(i, { count: Number(e.target.value) })} className="w-24" />
-            <Input label="Volumen (cl)" type="number" value={d.volumeCl ?? ""} onChange={(e) => update(i, { volumeCl: e.target.value === "" ? null : Number(e.target.value) })} className="w-32" />
+          <div className="flex flex-wrap gap-3">
+            <Input label="Antal" type="number" min={1} value={d.count ?? 1} onChange={(e) => update(i, { count: Number(e.target.value) })} className="w-full sm:w-24" />
+            <Input label="Volumen (cl)" type="number" value={d.volumeCl ?? ""} onChange={(e) => update(i, { volumeCl: e.target.value === "" ? null : Number(e.target.value) })} className="w-full sm:w-32" />
           </div>
         </div>
       ))}
