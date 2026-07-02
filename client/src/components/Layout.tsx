@@ -13,6 +13,7 @@ export function Layout() {
         <nav className="flex items-center gap-4 text-sm">
           <Link to="/" className="hover:text-terracotta">Oversigt</Link>
           <Link to="/matches" className="hover:text-terracotta">Kampe</Link>
+          <Link to="/rankings" className="hover:text-terracotta">Rangliste</Link>
           <Link to="/matches/new"><Button>Log kamp</Button></Link>
           <Button variant="ghost" onClick={() => { logout(); nav("/login"); }}>Log ud</Button>
         </nav>
