@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { sign } from "hono/jwt";
 import bcrypt from "bcryptjs";
 import type { AppContext } from "./types";
+import { upsertPlayer } from "./players";
 
 const auth = new Hono<AppContext>();
 
@@ -29,6 +30,9 @@ auth.post("/signup", async (c) => {
   await c.env.DB.prepare(
     "INSERT INTO users (id, username, password_hash, email, created_at) VALUES (?, ?, ?, ?, ?)",
   ).bind(id, username, passwordHash, sanitizedEmail, new Date().toISOString()).run();
+
+  // Register the new user in the shared player roster so they appear in /roster immediately.
+  await upsertPlayer(c.env.DB, username);
 
   const token = await sign(
     { userId: id, username, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 },

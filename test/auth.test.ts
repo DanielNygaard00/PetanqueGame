@@ -9,6 +9,7 @@ async function post(path: string, body: unknown) {
 
 beforeEach(async () => {
   await env.DB.exec("DELETE FROM users");
+  await env.DB.exec("DELETE FROM players");
 });
 
 describe("auth", () => {
@@ -23,6 +24,13 @@ describe("auth", () => {
   it("accepts signup with the correct code", async () => {
     const res = await post("/api/auth/signup", { username: "ida", code: "test-code" });
     expect(res.status).toBe(201);
+  });
+
+  it("registers the new user in the player roster", async () => {
+    const res = await post("/api/auth/signup", { username: "ida", code: "test-code" });
+    const token = (await res.json()).token;
+    const players = await (await app.request("/api/players", { headers: { authorization: `Bearer ${token}` } }, env)).json();
+    expect(players.map((p: any) => p.name)).toContain("ida");
   });
 
   it("signs up a new user and returns a token", async () => {
