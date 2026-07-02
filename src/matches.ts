@@ -4,6 +4,7 @@ import type { AppContext } from "./types";
 import { toRow, toApi } from "./mapping";
 import { drinkToRow, drinkToApi, type ApiDrink } from "./drinks";
 import { validateMatch } from "./validate";
+import { upsertPlayer } from "./players";
 
 const matches = new Hono<AppContext>();
 
@@ -44,6 +45,8 @@ matches.post("/", async (c) => {
     `INSERT INTO matches (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})`,
   ).bind(...vals).run();
   await insertDrinks(c.env.DB, id, Array.isArray(body.drinks) ? body.drinks : []);
+  await upsertPlayer(c.env.DB, body.Spiller);
+  await upsertPlayer(c.env.DB, body.Modstander);
   return c.json(await matchWithDrinks(c.env.DB, id), 201);
 });
 
@@ -71,6 +74,8 @@ matches.put("/:id", async (c) => {
     await c.env.DB.prepare("DELETE FROM match_drinks WHERE match_id = ?").bind(id).run();
     await insertDrinks(c.env.DB, id, body.drinks);
   }
+  await upsertPlayer(c.env.DB, body.Spiller);
+  await upsertPlayer(c.env.DB, body.Modstander);
   return c.json(await matchWithDrinks(c.env.DB, id));
 });
 

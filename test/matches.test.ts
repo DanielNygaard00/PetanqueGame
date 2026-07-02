@@ -7,6 +7,7 @@ let auth = "";
 beforeEach(async () => {
   await env.DB.exec("DELETE FROM match_drinks");
   await env.DB.exec("DELETE FROM matches");
+  await env.DB.exec("DELETE FROM players");
   await env.DB.exec("DELETE FROM users");
   const res = await app.request("/api/auth/signup", {
     method: "POST", headers: { "content-type": "application/json" },
@@ -91,5 +92,15 @@ describe("matches CRUD", () => {
     await app.request(`/api/matches/${created.id}`, { method: "DELETE", headers: H() }, env);
     const remaining = await env.DB.prepare("SELECT COUNT(*) AS n FROM match_drinks WHERE match_id = ?").bind(created.id).first();
     expect(remaining.n).toBe(0);
+  });
+
+  it("registers Spiller and Modstander in the roster on create", async () => {
+    await app.request("/api/matches", {
+      method: "POST", headers: H(),
+      body: JSON.stringify({ Dato: "2026-07-01", Spiller: "Ida", Modstander: "Bo", Vundet: true }),
+    }, env);
+    const players = await (await app.request("/api/players", { headers: H() }, env)).json();
+    const names = players.map((p: any) => p.name).sort();
+    expect(names).toEqual(["Bo", "Ida"]);
   });
 });
