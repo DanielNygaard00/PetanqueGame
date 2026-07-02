@@ -13,6 +13,12 @@
 - Runs against the v3 backend: signup takes `code`; `/api/players` gives `[{id,name,games}]` with upsert/rename(PATCH)/merge(POST `:id/merge`).
 - Danish UI labels; apéro palette. Tests under `client/` (jsdom).
 - Elo: base 1000, k 24, provisional < 5 games; eligible = non-group, both players named, `Vundet` boolean; replay ascending by Dato+Tid then index.
+- **MOBILE-FIRST (applies to every task).** Design for a phone first, enhance upward:
+  - Base (unprefixed) Tailwind classes target small screens; add `sm:`/`md:`/`lg:` only to *enhance* for wider viewports. Never assume a wide layout by default.
+  - Tap targets ≥ 44px tall; inputs/buttons full-width on mobile; generous spacing; no hover-only affordances.
+  - **Wide tables reflow on mobile:** render a stacked card list on small screens and the full table only at `md:` and up (or make the table horizontally scrollable as a fallback). This applies to the Rankings and Roster pages especially.
+  - Primary navigation must work on a narrow screen (see the mobile-first pass, Task 7): a bottom tab bar on mobile, the header nav on desktop.
+  - Content already sits in a centered max-width container; keep it, with comfortable mobile padding and bottom padding to clear the mobile tab bar.
 
 ---
 
@@ -495,7 +501,97 @@ git commit -m "feat(client): roster page — rename + merge players"
 
 ---
 
-### Task 7: End-to-end verify + deploy
+### Task 7: Mobile-first responsive pass (nav + existing screens)
+
+**Files:**
+- Modify: `client/src/components/Layout.tsx` (mobile bottom tab bar + desktop header nav)
+- Modify: `client/src/pages/DashboardPage.tsx`, `client/src/pages/MatchesPage.tsx`, `client/src/pages/MatchFormPage.tsx`, `client/src/components/MatchCard.tsx`, `client/src/components/DrinksEditor.tsx` (small-screen polish)
+- Modify: `client/src/pages/RankingsPage.tsx`, `client/src/pages/RosterPage.tsx` (ensure mobile card/scroll variants)
+
+**Interfaces:**
+- Produces: navigation and every screen usable one-handed on a phone; wide tables reflow; no horizontal overflow on a 360px viewport.
+
+- [ ] **Step 1: Layout — bottom tab bar on mobile, header nav on desktop**
+
+```tsx
+// client/src/components/Layout.tsx
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+import { Button } from "../ui/Button";
+
+const NAV = [
+  { to: "/", label: "Oversigt" },
+  { to: "/matches", label: "Kampe" },
+  { to: "/matches/new", label: "Log" },
+  { to: "/rankings", label: "Rangliste" },
+  { to: "/roster", label: "Spillere" },
+];
+
+export function Layout() {
+  const { logout } = useAuth();
+  const nav = useNavigate();
+  const { pathname } = useLocation();
+  return (
+    <div className="min-h-screen pb-16 md:pb-0">
+      <header className="flex items-center justify-between border-b border-ink/10 bg-cream/80 px-4 py-3 backdrop-blur md:px-6 md:py-4">
+        <Link to="/" className="font-display text-xl text-terracotta md:text-2xl">Pétanque · Apéro</Link>
+        <nav className="hidden items-center gap-4 text-sm md:flex">
+          {NAV.map((n) => <Link key={n.to} to={n.to} className="hover:text-terracotta">{n.label}</Link>)}
+          <Button variant="ghost" onClick={() => { logout(); nav("/login"); }}>Log ud</Button>
+        </nav>
+        <Button variant="ghost" className="md:hidden" onClick={() => { logout(); nav("/login"); }}>Log ud</Button>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8"><Outlet /></main>
+
+      {/* Mobile bottom tab bar */}
+      <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-ink/10 bg-cream/95 backdrop-blur md:hidden">
+        {NAV.map((n) => {
+          const active = n.to === "/" ? pathname === "/" : pathname.startsWith(n.to);
+          return (
+            <Link key={n.to} to={n.to} className={`flex flex-col items-center py-2 text-xs ${active ? "text-terracotta" : "text-ink/60"}`}>
+              {n.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+```
+
+- [ ] **Step 2: MatchCard — wrap on narrow screens**
+
+In `client/src/components/MatchCard.tsx`, make the flex header `flex-col gap-2 sm:flex-row sm:items-center sm:justify-between` so the score/badges/edit link drop below the players on a phone instead of crowding.
+
+- [ ] **Step 3: MatchesPage filter bar + DrinksEditor rows — stack on mobile**
+
+- `MatchesPage.tsx`: the filter bar `flex flex-wrap items-end gap-3` already wraps; make the search `Input` `w-full sm:w-64` and the export button full-width on mobile (`w-full sm:w-auto`).
+- `DrinksEditor.tsx`: the count/volume row `flex gap-3` → `flex flex-wrap gap-3` (already fine); ensure the two inputs are comfortably tappable (`w-full sm:w-24` / `sm:w-32`).
+
+- [ ] **Step 4: Dashboard grids — confirm mobile-first**
+
+`DashboardPage.tsx`: stat cards `grid-cols-2 md:grid-cols-5` (2-up on phone), insight sections `grid gap-4 md:grid-cols-2` — verify all charts sit inside `ResponsiveContainer` (they do) so they scale to phone width. Adjust any `grid-cols-4`/`grid-cols-5` base to a mobile-friendly base (`grid-cols-2`).
+
+- [ ] **Step 5: Rankings & Roster — mobile card variant**
+
+- `RankingsPage.tsx`: wrap the `<table>` in `hidden md:block` and add a `md:hidden space-y-2` card list for mobile (rank + name + Elo prominent, then games · W–L · win% · form in a sub-line). Provisional badge inline.
+- `RosterPage.tsx`: the player list is already a vertical list (mobile-friendly); ensure the rename inline controls wrap (`flex-wrap`) and the merge `<select>`s are full-width on mobile (`w-full sm:w-auto`).
+
+- [ ] **Step 6: Verify at a phone width**
+
+Run: `cd client && npx vitest run && npm run build`. Expected: green + clean. Manually confirm (in Task 8 smoke test / responsive devtools at 360px) there is no horizontal scroll and the bottom tab bar is reachable.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add client/src/components/Layout.tsx client/src/components/MatchCard.tsx client/src/components/DrinksEditor.tsx client/src/pages/
+git commit -m "feat(client): mobile-first — bottom tab nav, reflowing tables, phone-friendly forms"
+```
+
+---
+
+### Task 8: End-to-end verify + deploy
 
 **Files:** none (verify + deploy)
 
@@ -530,7 +626,7 @@ git add -A && git commit -m "chore: v3 end-to-end verify + deploy"
 
 ## Self-Review
 
-**Spec coverage:** signup code field (Task 1); player hooks + type (Task 2); Spiller+Modstander roster pickers (Task 3); Elo module (Task 4); Rankings page + nav (Task 5); Roster rename/merge page + nav (Task 6); e2e + migration + `SIGNUP_CODE` secret + deploy (Task 7). ✅
+**Spec coverage:** signup code field (Task 1); player hooks + type (Task 2); Spiller+Modstander roster pickers (Task 3); Elo module (Task 4); Rankings page + nav (Task 5); Roster rename/merge page + nav (Task 6); mobile-first responsive pass — bottom tab nav + reflowing tables + phone-friendly screens (Task 7); e2e + migration + `SIGNUP_CODE` secret + deploy (Task 8). ✅ Mobile-first is a global constraint applied within every task, with Task 7 as the dedicated cross-screen pass.
 
 **Placeholder scan:** Tasks 1/3/5/6 give focused edits against existing files (they already exist from v1/v2) with exact code for new files (`elo.ts`, pages) and named edits elsewhere. No "TODO/TBD". **Type consistency:** `Player`, `PlayerRating`, hook names, and the `computeElo` signature are stable across tasks. `avgMargin` sign convention (Spiller perspective; opponent inverse) matches the backend margin definition and the spec.
 
