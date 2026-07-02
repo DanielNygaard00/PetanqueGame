@@ -9,6 +9,7 @@ import users from "./users";
 import matches from "./matches";
 import options from "./options";
 import exportRoute from "./export";
+import players from "./players";
 
 const app = new Hono<AppContext>();
 
@@ -33,6 +34,10 @@ app.route("/api/options", options);
 
 app.use("/api/export", guard);
 app.route("/api/export", exportRoute);
+
+app.use("/api/players", guard);
+app.use("/api/players/*", guard);
+app.route("/api/players", players);
 
 app.all("/api/*", (c) => c.json({ message: "Not found" }, 404));
 
