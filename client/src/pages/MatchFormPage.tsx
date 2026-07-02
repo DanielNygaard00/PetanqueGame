@@ -1,7 +1,7 @@
 // client/src/pages/MatchFormPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useMatches, useCreateMatch, useUpdateMatch, useOptions, useAddOption } from "../api/hooks";
+import { useMatches, useCreateMatch, useUpdateMatch, useOptions, useAddOption, usePlayers, useAddPlayer } from "../api/hooks";
 import { DrinksEditor } from "../components/DrinksEditor";
 import { SelectOrAdd } from "../ui/SelectOrAdd";
 import { Input } from "../ui/Input";
@@ -15,14 +15,15 @@ export function MatchFormPage() {
   const { data: matches = [] } = useMatches();
   const create = useCreateMatch();
   const update = useUpdateMatch();
-  const players = useOptions("players");
+  const players = usePlayers();
+  const addPlayer = useAddPlayer();
+  const playerNames = (players.data ?? []).map((p) => p.name);
   const arenas = useOptions("arenas");
   const drinkTypes = useOptions("drink_types");
   const drinkCategories = useOptions("drink_categories");
   const drinkBrands = useOptions("drink_brands");
   const drinkNames = useOptions("drink_names");
   const addArena = useAddOption("arenas");
-  const addPlayer = useAddOption("players");
   const addDrinkType = useAddOption("drink_types");
   const addDrinkCategory = useAddOption("drink_categories");
   const addDrinkBrand = useAddOption("drink_brands");
@@ -63,9 +64,9 @@ export function MatchFormPage() {
       <Card className="space-y-3">
         <Input label="Dato" type="date" value={form.Dato ?? ""} onChange={(e) => set({ Dato: e.target.value })} />
         <Input label="Tid" type="time" value={form.Tid ?? ""} onChange={(e) => set({ Tid: e.target.value })} />
-        <SelectOrAdd label="Spiller" value={form.Spiller ?? ""} options={(players.data ?? []).map((o) => o.name)} onChange={(v) => set({ Spiller: v })} onAdd={(v) => addPlayer.mutate(v)} />
+        <SelectOrAdd label="Spiller" value={form.Spiller ?? ""} options={playerNames} onChange={(v) => set({ Spiller: v })} onAdd={(v) => addPlayer.mutate(v)} />
         <SelectOrAdd label="Arena" value={form.Arena ?? ""} options={(arenas.data ?? []).map((o) => o.name)} onChange={(v) => set({ Arena: v })} onAdd={(v) => addArena.mutate(v)} />
-        <Input label="Modstander" value={form.Modstander ?? ""} onChange={(e) => set({ Modstander: e.target.value })} />
+        <SelectOrAdd label="Modstander" value={form.Modstander ?? ""} options={playerNames} onChange={(v) => set({ Modstander: v })} onAdd={(v) => addPlayer.mutate(v)} />
         <Input label="Point" type="number" value={form.Point ?? ""} onChange={(e) => set({ Point: e.target.value === "" ? undefined : Number(e.target.value) })} />
         <Input label="Modstander point" type="number" value={form.Modstander_Point ?? ""} onChange={(e) => set({ Modstander_Point: e.target.value === "" ? undefined : Number(e.target.value) })} />
         <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.Vundet} onChange={(e) => set({ Vundet: e.target.checked })} /> Vundet</label>
