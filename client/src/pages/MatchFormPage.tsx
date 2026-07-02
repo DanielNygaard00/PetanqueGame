@@ -32,9 +32,25 @@ export function MatchFormPage() {
   const [form, setForm] = useState<Partial<Match>>({ Vundet: false, Gruppe_Bool: false, drinks: [] as Drink[] });
   const [error, setError] = useState<string | null>(null);
 
+  const last = matches[0];
+
   useEffect(() => {
     if (id) { const m = matches.find((x) => x.id === id); if (m) setForm(m); }
   }, [id, matches]);
+
+  useEffect(() => {
+    if (id) return; // edit mode handled elsewhere
+    const nowHM = new Date().toTimeString().slice(0, 5);
+    const today = new Date().toISOString().slice(0, 10);
+    setForm((f) => ({
+      ...f,
+      Dato: f.Dato ?? today,
+      Tid: f.Tid ?? nowHM,
+      Spiller: f.Spiller ?? last?.Spiller,
+      Arena: f.Arena ?? last?.Arena,
+    }));
+    // run once when matches first arrive
+  }, [id, matches.length]);
 
   const set = (patch: Partial<Match>) => setForm((f) => ({ ...f, ...patch }));
 
@@ -90,6 +106,11 @@ export function MatchFormPage() {
           onAddName={(v) => addDrinkName.mutate(v)}
         />
       </Card>
+      {!id && last?.drinks?.length ? (
+        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => set({ drinks: last.drinks })}>
+          Gentag sidste omgang ({last.drinks.length} drikke)
+        </Button>
+      ) : null}
       <Button type="submit">{id ? "Gem ændringer" : "Log kamp"}</Button>
     </form>
   );
