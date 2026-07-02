@@ -31,9 +31,15 @@ export function Layout() {
       {/* Mobile bottom tab bar */}
       <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-ink/10 bg-cream/95 backdrop-blur md:hidden">
         {NAV.map((n) => {
-          const active = n.to === "/" ? pathname === "/" : pathname.startsWith(n.to);
+          const isActive = (to: string) => {
+            if (to === "/") return pathname === "/";
+            if (to === "/matches") return pathname === "/matches" || (pathname.startsWith("/matches/") && !pathname.startsWith("/matches/new"));
+            if (to === "/matches/new") return pathname === "/matches/new";
+            return pathname.startsWith(to);
+          };
+          const active = isActive(n.to);
           return (
-            <Link key={n.to} to={n.to} className={`flex flex-col items-center py-2 text-xs ${active ? "text-terracotta" : "text-ink/60"}`}>
+            <Link key={n.to} to={n.to} className={`flex flex-col items-center min-h-[44px] justify-center py-2 text-xs ${active ? "text-terracotta" : "text-ink/60"}`}>
               {n.label}
             </Link>
           );
