@@ -1,4 +1,5 @@
 export type AuthResponse = { token: string; user: { id: string; username: string } };
+export type Player = { id: string; name: string; games: number };
 export type Option = { id: string; name: string };
 export type DrinkHierarchy = { types: Option[]; categories: Option[]; brands: Option[]; names: Option[] };
 
