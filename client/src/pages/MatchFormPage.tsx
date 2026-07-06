@@ -67,7 +67,7 @@ export function MatchFormPage() {
         ? [{ score: null, players: [user.username] }, { score: null, players: [] }]
         : f.teams,
     }));
-  }, [id, matches.length]);
+  }, [id, matches.length, user?.username]);
 
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
   const participantNames = form.teams.flatMap((t) => t.players);
