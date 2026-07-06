@@ -6,8 +6,8 @@ export type Insight = { text: string; tone?: "good" | "bad" | "neutral" };
 const MIN = 3;
 const TIME_LABEL: Record<string, string> = { morning: "om morgenen", afternoon: "om eftermiddagen", evening: "om aftenen", night: "om natten", unknown: "" };
 
-export function deriveInsights(matches: Match[]): Insight[] {
-  const s = deriveStats(matches);
+export function deriveInsights(matches: Match[], viewer: string): Insight[] {
+  const s = deriveStats(matches, viewer);
   const out: Insight[] = [];
   if (s.total < MIN) return out;
 
