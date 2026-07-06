@@ -88,6 +88,7 @@ matches.post("/", async (c) => {
 matches.get("/", async (c) => {
   const { results } = await c.env.DB.prepare("SELECT * FROM matches ORDER BY date DESC, time DESC").all();
   const out = [];
+  // N+1 by design: this friend-group app has few matches; batch-join if the list ever grows large.
   for (const r of results) {
     const api = toApi(r as Record<string, unknown>);
     api.teams = await teamsFor(c.env.DB, api.id as string);
@@ -101,9 +102,9 @@ matches.put("/:id", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json().catch(() => ({}));
   const row = toRow(body);
-  row.updated_at = new Date().toISOString();
-  const assignments = Object.keys(row).map((k) => `${k} = ?`).join(", ");
   if (Object.keys(row).length) {
+    row.updated_at = new Date().toISOString();
+    const assignments = Object.keys(row).map((k) => `${k} = ?`).join(", ");
     await c.env.DB.prepare(`UPDATE matches SET ${assignments} WHERE id = ?`).bind(...Object.values(row), id).run();
   }
   if (Array.isArray(body.teams)) {

@@ -43,6 +43,7 @@ describe("matches CRUD (participants)", () => {
         drinks: [{ type: "Øl", count: 1, player: "Ida" }, { type: "Øl", count: 1 }],
       }),
     }, env);
+    expect(res.status).toBe(201);
     const m = await res.json();
     expect(m.teams).toHaveLength(3);
     expect(m.teams[0].won).toBe(true);
