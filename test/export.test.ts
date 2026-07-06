@@ -27,9 +27,10 @@ describe("export", () => {
     }, env);
     const res = await app.request("/api/export", { headers: H() }, env);
     const csv = await res.text();
-    expect(csv).toContain("Dato,Tid,Arena,Hold,Spiller,Point,Vundet,Modstandere");
+    expect(csv).toContain("Dato,Tid,Arena,Hold,Spiller,Point,Vundet,Modstandere,Konsekutive spil,Spillets genstande,Drikke");
     expect(csv).toContain("Ida");
-    expect(csv).toContain("Bo");
+    const idaRow = csv.split("\r\n").find((line) => line.startsWith("2026-07-01") && line.includes("Ida"))!;
+    expect(idaRow).toContain("Bo");
     expect(csv).toContain("2× Grøn");
   });
 });
