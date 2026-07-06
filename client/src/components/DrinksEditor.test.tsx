@@ -1,7 +1,7 @@
 // client/src/components/DrinksEditor.test.tsx
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DrinksEditor } from "./DrinksEditor";
 
@@ -33,5 +33,12 @@ describe("DrinksEditor", () => {
     await userEvent.clear(countInput);
     await userEvent.type(countInput, "3");
     expect(onChange).toHaveBeenLastCalledWith([expect.objectContaining({ count: 3 })]);
+  });
+
+  it("assigns a drink to a player", () => {
+    const onChange = vi.fn();
+    render(<DrinksEditor value={[{ count: 1 }]} onChange={onChange} typeOptions={[]} playerOptions={["Ida", "Bo"]} />);
+    fireEvent.change(screen.getByLabelText("Hvem drak?"), { target: { value: "Ida" } });
+    expect(onChange).toHaveBeenCalledWith([{ count: 1, player: "Ida" }]);
   });
 });

@@ -11,13 +11,14 @@ type Props = {
   categoryOptions?: string[];
   brandOptions?: string[];
   nameOptions?: string[];
+  playerOptions?: string[];
   onAddType?: (v: string) => void;
   onAddCategory?: (v: string) => void;
   onAddBrand?: (v: string) => void;
   onAddName?: (v: string) => void;
 };
 
-export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [], brandOptions = [], nameOptions = [], onAddType, onAddCategory, onAddBrand, onAddName }: Props) {
+export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [], brandOptions = [], nameOptions = [], playerOptions = [], onAddType, onAddCategory, onAddBrand, onAddName }: Props) {
   const update = (i: number, patch: Partial<Drink>) =>
     onChange(value.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
   const add = () => onChange([...value, { count: 1 }]);
@@ -42,6 +43,20 @@ export function DrinksEditor({ value, onChange, typeOptions, categoryOptions = [
             <Input label="Antal" type="number" min={1} value={d.count ?? 1} onChange={(e) => update(i, { count: Number(e.target.value) })} className="w-full sm:w-24" />
             <Input label="Volumen (cl)" type="number" value={d.volumeCl ?? ""} onChange={(e) => update(i, { volumeCl: e.target.value === "" ? null : Number(e.target.value) })} className="w-full sm:w-32" />
           </div>
+          {playerOptions.length > 0 && (
+            <label className="block text-sm">
+              <span className="mb-1 block text-ink/60">Hvem drak?</span>
+              <select
+                aria-label="Hvem drak?"
+                value={d.player ?? ""}
+                onChange={(e) => update(i, { player: e.target.value || null })}
+                className="w-full rounded-card border border-ink/10 bg-white/70 px-3 py-1.5 text-sm"
+              >
+                <option value="">Ingen / delt</option>
+                {playerOptions.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </label>
+          )}
         </div>
       ))}
       <Button type="button" variant="ghost" onClick={add}>+ Tilføj drik</Button>
