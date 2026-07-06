@@ -1,11 +1,16 @@
-// src/validate.ts
 export function validateMatch(body: Record<string, any>): string | null {
   if (!body?.Dato) return "Dato is required";
-  if (!body?.Spiller) return "Spiller is required";
-  for (const key of ["Point", "Modstander_Point"]) {
-    const v = body[key];
-    if (v === undefined || v === null || v === "") continue;
-    if (!Number.isInteger(v) || v < 0 || v > 50) return `${key} must be an integer 0..50`;
+  const teams = body?.teams;
+  if (!Array.isArray(teams) || teams.length < 2) return "At least two teams are required";
+  for (const t of teams) {
+    const players = Array.isArray(t?.players)
+      ? t.players.filter((p: unknown) => typeof p === "string" && p.trim() !== "")
+      : [];
+    if (players.length < 1) return "Each team needs at least one player";
+    const s = t?.score;
+    if (s !== undefined && s !== null && s !== "") {
+      if (!Number.isInteger(s) || s < 0 || s > 50) return "score must be an integer 0..50";
+    }
   }
   if (Array.isArray(body.drinks)) {
     for (const d of body.drinks) {
