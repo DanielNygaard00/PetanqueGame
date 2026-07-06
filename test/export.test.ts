@@ -5,45 +5,31 @@ import app from "../src/index";
 
 let auth = "";
 beforeEach(async () => {
+  await env.DB.exec("DELETE FROM match_drinks");
+  await env.DB.exec("DELETE FROM match_players");
   await env.DB.exec("DELETE FROM matches");
+  await env.DB.exec("DELETE FROM players");
   await env.DB.exec("DELETE FROM users");
   const res = await app.request("/api/auth/signup", {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ username: "ida", code: "test-code" }),
+    body: JSON.stringify({ username: "Ida", code: "test-code" }),
   }, env);
   auth = `Bearer ${(await res.json()).token}`;
 });
+const H = () => ({ authorization: auth, "content-type": "application/json" });
 
 describe("export", () => {
-  it("exports tidy long format: one row per match x drink with new columns", async () => {
+  it("exports one row per participant with opponents and drinks", async () => {
     await app.request("/api/matches", {
-      method: "POST", headers: { authorization: auth, "content-type": "application/json" },
-      body: JSON.stringify({
-        Dato: "2026-07-01", Tid: "18:30", Spiller: "Ida", Vundet: true, Point: 13, Modstander_Point: 7,
-        drinks: [{ type: "Øl", count: 3, volumeCl: 33 }, { type: "Vin", category: "Rosé", count: 1 }],
-      }),
+      method: "POST", headers: H(),
+      body: JSON.stringify({ Dato: "2026-07-01", teams: [{ score: 13, players: ["Ida"] }, { score: 5, players: ["Bo"] }],
+        drinks: [{ name: "Grøn", count: 2, player: "Ida" }] }),
     }, env);
-    const res = await app.request("/api/export", { headers: { authorization: auth } }, env);
-    const text = await res.text();
-    expect(text.charCodeAt(0)).toBe(0xfeff);
-    const lines = text.slice(1).trim().split("\r\n");
-    expect(lines[0]).toContain("Modstander_Point");
-    expect(lines[0]).toContain("Margin");
-    expect(lines[0]).toContain("Antal");
-    expect(lines[0]).toContain("Volumen_cl");
-    // two drinks -> two data rows
-    expect(lines).toHaveLength(3);
-    // margin = 13 - 7 = 6 present on the rows
-    expect(lines[1]).toContain(",6,");
-  });
-
-  it("emits one row for a match with no drinks", async () => {
-    await app.request("/api/matches", {
-      method: "POST", headers: { authorization: auth, "content-type": "application/json" },
-      body: JSON.stringify({ Dato: "2026-07-02", Spiller: "Bo" }),
-    }, env);
-    const res = await app.request("/api/export", { headers: { authorization: auth } }, env);
-    const lines = (await res.text()).slice(1).trim().split("\r\n");
-    expect(lines.length).toBe(2); // header + one row
+    const res = await app.request("/api/export", { headers: H() }, env);
+    const csv = await res.text();
+    expect(csv).toContain("Dato,Tid,Arena,Hold,Spiller,Point,Vundet,Modstandere");
+    expect(csv).toContain("Ida");
+    expect(csv).toContain("Bo");
+    expect(csv).toContain("2× Grøn");
   });
 });
