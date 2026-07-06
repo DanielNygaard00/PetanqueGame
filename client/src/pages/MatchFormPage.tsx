@@ -4,15 +4,31 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useMatches, useCreateMatch, useUpdateMatch, useOptions, useAddOption, usePlayers, useAddPlayer } from "../api/hooks";
 import { ymd } from "../stats/dateRange";
 import { DrinksEditor } from "../components/DrinksEditor";
+import { TeamsEditor, type TeamInput } from "../components/TeamsEditor";
 import { SelectOrAdd } from "../ui/SelectOrAdd";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { useAuth } from "../auth/AuthContext";
 import type { Match, Drink } from "../api/types";
+
+type FormState = {
+  Dato?: string; Tid?: string; Arena?: string; "Spillets genstande"?: string;
+  teams: TeamInput[]; drinks: Drink[];
+};
+
+function toFormState(m: Match): FormState {
+  return {
+    Dato: m.Dato, Tid: m.Tid, Arena: m.Arena, "Spillets genstande": m["Spillets genstande"],
+    teams: (m.teams ?? []).map((t) => ({ score: t.score, players: t.players.map((p) => p.name) })),
+    drinks: m.drinks ?? [],
+  };
+}
 
 export function MatchFormPage() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { user } = useAuth();
   const { data: matches = [] } = useMatches();
   const create = useCreateMatch();
   const update = useUpdateMatch();
@@ -30,38 +46,37 @@ export function MatchFormPage() {
   const addDrinkBrand = useAddOption("drink_brands");
   const addDrinkName = useAddOption("drink_names");
 
-  const [form, setForm] = useState<Partial<Match>>({ Vundet: false, Gruppe_Bool: false, drinks: [] as Drink[] });
+  const [form, setForm] = useState<FormState>({ teams: [{ score: null, players: [] }, { score: null, players: [] }], drinks: [] });
   const [error, setError] = useState<string | null>(null);
-
   const last = matches[0];
 
   useEffect(() => {
-    if (id) { const m = matches.find((x) => x.id === id); if (m) setForm(m); }
+    if (id) { const m = matches.find((x) => x.id === id); if (m) setForm(toFormState(m)); }
   }, [id, matches]);
 
   useEffect(() => {
-    if (id) return; // edit mode handled elsewhere
+    if (id) return;
     const nowHM = new Date().toTimeString().slice(0, 5);
     const today = ymd(new Date());
     setForm((f) => ({
       ...f,
       Dato: f.Dato ?? today,
       Tid: f.Tid ?? nowHM,
-      Spiller: f.Spiller ?? last?.Spiller,
       Arena: f.Arena ?? last?.Arena,
+      teams: f.teams[0].players.length === 0 && user?.username
+        ? [{ score: null, players: [user.username] }, { score: null, players: [] }]
+        : f.teams,
     }));
-    // run once when matches first arrive
   }, [id, matches.length]);
 
-  const set = (patch: Partial<Match>) => setForm((f) => ({ ...f, ...patch }));
+  const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
+  const participantNames = form.teams.flatMap((t) => t.players);
 
   function validate(): string | null {
     if (!form.Dato) return "Dato er påkrævet";
-    if (!form.Spiller) return "Spiller er påkrævet";
-    for (const k of ["Point", "Modstander_Point"] as const) {
-      const v = form[k];
-      if (v != null && (v < 0 || v > 50)) return "Point skal være mellem 0 og 50";
-    }
+    if (form.teams.length < 2) return "Der skal være mindst to hold";
+    if (form.teams.some((t) => t.players.length === 0)) return "Hvert hold skal have mindst én spiller";
+    for (const t of form.teams) if (t.score != null && (t.score < 0 || t.score > 50)) return "Point skal være mellem 0 og 50";
     return null;
   }
 
@@ -70,8 +85,12 @@ export function MatchFormPage() {
     const err = validate();
     if (err) { setError(err); return; }
     setError(null);
-    if (id) await update.mutateAsync({ id, ...form });
-    else await create.mutateAsync(form);
+    const payload = {
+      Dato: form.Dato, Tid: form.Tid, Arena: form.Arena, "Spillets genstande": form["Spillets genstande"],
+      teams: form.teams, drinks: form.drinks,
+    };
+    if (id) await update.mutateAsync({ id, ...payload });
+    else await create.mutateAsync(payload);
     nav("/matches");
   }
 
@@ -81,26 +100,23 @@ export function MatchFormPage() {
       <Card className="space-y-3">
         <Input label="Dato" type="date" value={form.Dato ?? ""} onChange={(e) => set({ Dato: e.target.value })} />
         <Input label="Tid" type="time" value={form.Tid ?? ""} onChange={(e) => set({ Tid: e.target.value })} />
-        <SelectOrAdd label="Spiller" value={form.Spiller ?? ""} options={playerNames} onChange={(v) => set({ Spiller: v })} onAdd={(v) => addPlayer.mutate(v)} />
         <SelectOrAdd label="Arena" value={form.Arena ?? ""} options={(arenas.data ?? []).map((o) => o.name)} onChange={(v) => set({ Arena: v })} onAdd={(v) => addArena.mutate(v)} />
-        <SelectOrAdd label="Modstander" value={form.Modstander ?? ""} options={playerNames} onChange={(v) => set({ Modstander: v })} onAdd={(v) => addPlayer.mutate(v)} />
-        <Input label="Point" type="number" value={form.Point ?? ""} onChange={(e) => set({ Point: e.target.value === "" ? undefined : Number(e.target.value) })} />
-        <Input label="Modstander point" type="number" value={form.Modstander_Point ?? ""} onChange={(e) => set({ Modstander_Point: e.target.value === "" ? undefined : Number(e.target.value) })} />
-        <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.Vundet} onChange={(e) => set({ Vundet: e.target.checked })} /> Vundet</label>
-        <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.Gruppe_Bool} onChange={(e) => set({ Gruppe_Bool: e.target.checked })} /> Gruppespil</label>
-        {form.Gruppe_Bool && <Input label="Gruppemedlemmer" value={form.Gruppe_medlemmer ?? ""} onChange={(e) => set({ Gruppe_medlemmer: e.target.value })} />}
-        <Input label="Konsekutive spil" type="number" value={form["Konsekutive spil"] ?? ""} onChange={(e) => set({ "Konsekutive spil": e.target.value === "" ? undefined : Number(e.target.value) })} />
         <Input label="Spillets genstande" value={form["Spillets genstande"] ?? ""} onChange={(e) => set({ "Spillets genstande": e.target.value })} />
+      </Card>
+      <Card className="space-y-3">
+        <h3 className="font-display text-lg">Hold</h3>
+        <TeamsEditor value={form.teams} onChange={(teams) => set({ teams })} playerOptions={playerNames} onAddPlayer={(v) => addPlayer.mutate(v)} />
       </Card>
       <Card>
         <h3 className="mb-2 font-display text-lg">Drikkevarer i denne omgang</h3>
         <DrinksEditor
-          value={form.drinks ?? []}
+          value={form.drinks}
           onChange={(drinks) => set({ drinks })}
           typeOptions={(drinkTypes.data ?? []).map((o) => o.name)}
           categoryOptions={(drinkCategories.data ?? []).map((o) => o.name)}
           brandOptions={(drinkBrands.data ?? []).map((o) => o.name)}
           nameOptions={(drinkNames.data ?? []).map((o) => o.name)}
+          playerOptions={participantNames}
           onAddType={(v) => addDrinkType.mutate(v)}
           onAddCategory={(v) => addDrinkCategory.mutate(v)}
           onAddBrand={(v) => addDrinkBrand.mutate(v)}
@@ -108,7 +124,7 @@ export function MatchFormPage() {
         />
       </Card>
       {!id && last?.drinks?.length ? (
-        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => set({ drinks: last.drinks })}>
+        <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => set({ drinks: last.drinks ?? [] })}>
           Gentag sidste omgang ({last.drinks.length} drikke)
         </Button>
       ) : null}
