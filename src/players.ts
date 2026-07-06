@@ -42,6 +42,7 @@ players.patch("/:id", async (c) => {
   const target = (results as { id: string; name: string }[]).find((r) => r.name.toLowerCase() === newName.toLowerCase() && r.id !== id);
   if (target) {
     await c.env.DB.batch([
+      c.env.DB.prepare("DELETE FROM match_players WHERE player_id = ? AND match_id IN (SELECT match_id FROM match_players WHERE player_id = ?)").bind(id, target.id),
       c.env.DB.prepare("UPDATE match_players SET player_id = ? WHERE player_id = ?").bind(target.id, id),
       c.env.DB.prepare("UPDATE match_drinks SET player_id = ? WHERE player_id = ?").bind(target.id, id),
       c.env.DB.prepare("DELETE FROM players WHERE id = ?").bind(id),
@@ -59,6 +60,7 @@ players.post("/:id/merge", async (c) => {
   const target = await c.env.DB.prepare("SELECT id, name FROM players WHERE id = ?").bind(intoId).first<{ id: string; name: string }>();
   if (!source || !target) return c.json({ message: "Not found" }, 404);
   await c.env.DB.batch([
+    c.env.DB.prepare("DELETE FROM match_players WHERE player_id = ? AND match_id IN (SELECT match_id FROM match_players WHERE player_id = ?)").bind(source.id, target.id),
     c.env.DB.prepare("UPDATE match_players SET player_id = ? WHERE player_id = ?").bind(target.id, source.id),
     c.env.DB.prepare("UPDATE match_drinks SET player_id = ? WHERE player_id = ?").bind(target.id, source.id),
     c.env.DB.prepare("DELETE FROM players WHERE id = ?").bind(source.id),

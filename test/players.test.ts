@@ -60,4 +60,17 @@ describe("players", () => {
     const drink = await env.DB.prepare("SELECT player_id FROM match_drinks LIMIT 1").first<{ player_id: string }>();
     expect(drink!.player_id).toBe(rasmus.id);
   });
+
+  it("deduplicates same-match rows when merging — games count is 1, not 2", async () => {
+    await app.request("/api/matches", {
+      method: "POST", headers: H(),
+      body: JSON.stringify({ Dato: "2026-07-01", teams: [{ score: 13, players: ["Ras"] }, { score: 5, players: ["Rasmus"] }] }),
+    }, env);
+    let players = await (await app.request("/api/players", { headers: H() }, env)).json();
+    const ras = players.find((p: any) => p.name === "Ras");
+    const rasmus = players.find((p: any) => p.name === "Rasmus");
+    await app.request(`/api/players/${ras.id}/merge`, { method: "POST", headers: H(), body: JSON.stringify({ intoId: rasmus.id }) }, env);
+    players = await (await app.request("/api/players", { headers: H() }, env)).json();
+    expect(players.find((p: any) => p.name === "Rasmus").games).toBe(1);
+  });
 });
