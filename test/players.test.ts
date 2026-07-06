@@ -6,6 +6,7 @@ import app from "../src/index";
 let auth = "";
 beforeEach(async () => {
   await env.DB.exec("DELETE FROM match_drinks");
+  await env.DB.exec("DELETE FROM match_players");
   await env.DB.exec("DELETE FROM matches");
   await env.DB.exec("DELETE FROM players");
   await env.DB.exec("DELETE FROM users");
@@ -17,42 +18,46 @@ beforeEach(async () => {
 });
 const H = () => ({ authorization: auth, "content-type": "application/json" });
 
-describe("players roster", () => {
-  it("upserts and dedupes case-insensitively", async () => {
-    const a = await (await app.request("/api/players", { method: "POST", headers: H(), body: JSON.stringify({ name: "Ida" }) }, env)).json();
-    const b = await (await app.request("/api/players", { method: "POST", headers: H(), body: JSON.stringify({ name: " ida " }) }, env)).json();
-    expect(b.id).toBe(a.id);
-    const list = await (await app.request("/api/players", { headers: H() }, env)).json();
-    expect(list).toHaveLength(1);
-  });
+async function logMatch(a: string, b: string) {
+  return (await app.request("/api/matches", {
+    method: "POST", headers: H(),
+    body: JSON.stringify({ Dato: "2026-07-01", teams: [{ score: 13, players: [a] }, { score: 5, players: [b] }] }),
+  }, env)).json();
+}
 
-  it("lists players with game counts", async () => {
-    await app.request("/api/matches", { method: "POST", headers: H(), body: JSON.stringify({ Dato: "2026-07-01", Spiller: "Ida", Modstander: "Bo", Vundet: true }) }, env);
-    const list = await (await app.request("/api/players", { headers: H() }, env)).json();
-    const ida = list.find((p: any) => p.name === "Ida");
-    const bo = list.find((p: any) => p.name === "Bo");
-    expect(ida.games).toBe(1);
+describe("players", () => {
+  it("counts games from match_players", async () => {
+    await logMatch("Ida", "Bo");
+    const players = await (await app.request("/api/players", { headers: H() }, env)).json();
+    const bo = players.find((p: any) => p.name === "Bo");
     expect(bo.games).toBe(1);
   });
 
-  it("renames a player and rewrites matches", async () => {
-    await app.request("/api/matches", { method: "POST", headers: H(), body: JSON.stringify({ Dato: "2026-07-01", Spiller: "Bob", Modstander: "Ida", Vundet: false }) }, env);
-    const list = await (await app.request("/api/players", { headers: H() }, env)).json();
-    const bob = list.find((p: any) => p.name === "Bob");
-    await app.request(`/api/players/${bob.id}`, { method: "PATCH", headers: H(), body: JSON.stringify({ name: "Bo" }) }, env);
-    const matches = await (await app.request("/api/matches", { headers: H() }, env)).json();
-    expect(matches[0].Spiller).toBe("Bo");
+  it("renames a player and match_players follow via id", async () => {
+    await logMatch("Ida", "Bo");
+    const players = await (await app.request("/api/players", { headers: H() }, env)).json();
+    const bo = players.find((p: any) => p.name === "Bo");
+    await app.request(`/api/players/${bo.id}`, { method: "PATCH", headers: H(), body: JSON.stringify({ name: "Bob" }) }, env);
+    const after = await (await app.request("/api/players", { headers: H() }, env)).json();
+    expect(after.find((p: any) => p.name === "Bob").games).toBe(1);
+    expect(after.some((p: any) => p.name === "Bo")).toBe(false);
   });
 
-  it("merges one player into another", async () => {
-    await app.request("/api/matches", { method: "POST", headers: H(), body: JSON.stringify({ Dato: "2026-07-01", Spiller: "Bob", Modstander: "Ida", Vundet: true }) }, env);
-    await app.request("/api/matches", { method: "POST", headers: H(), body: JSON.stringify({ Dato: "2026-07-02", Spiller: "Bo", Modstander: "Ida", Vundet: true }) }, env);
-    let list = await (await app.request("/api/players", { headers: H() }, env)).json();
-    const bob = list.find((p: any) => p.name === "Bob");
-    const bo = list.find((p: any) => p.name === "Bo");
-    await app.request(`/api/players/${bob.id}/merge`, { method: "POST", headers: H(), body: JSON.stringify({ intoId: bo.id }) }, env);
-    list = await (await app.request("/api/players", { headers: H() }, env)).json();
-    expect(list.find((p: any) => p.name === "Bob")).toBeUndefined();
-    expect(list.find((p: any) => p.name === "Bo").games).toBe(2);
+  it("merges two players, repointing participants and drinks", async () => {
+    await app.request("/api/matches", {
+      method: "POST", headers: H(),
+      body: JSON.stringify({ Dato: "2026-07-01", teams: [{ score: 13, players: ["Ida"] }, { score: 5, players: ["Ras"] }],
+        drinks: [{ type: "Øl", count: 1, player: "Ras" }] }),
+    }, env);
+    await logMatch("Ida", "Rasmus");
+    let players = await (await app.request("/api/players", { headers: H() }, env)).json();
+    const ras = players.find((p: any) => p.name === "Ras");
+    const rasmus = players.find((p: any) => p.name === "Rasmus");
+    await app.request(`/api/players/${ras.id}/merge`, { method: "POST", headers: H(), body: JSON.stringify({ intoId: rasmus.id }) }, env);
+    players = await (await app.request("/api/players", { headers: H() }, env)).json();
+    expect(players.some((p: any) => p.name === "Ras")).toBe(false);
+    expect(players.find((p: any) => p.name === "Rasmus").games).toBe(2);
+    const drink = await env.DB.prepare("SELECT player_id FROM match_drinks LIMIT 1").first<{ player_id: string }>();
+    expect(drink!.player_id).toBe(rasmus.id);
   });
 });

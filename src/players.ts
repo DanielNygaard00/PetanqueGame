@@ -19,7 +19,7 @@ players.get("/", async (c) => {
   const { results } = await c.env.DB.prepare("SELECT id, name FROM players ORDER BY name").all();
   const out = [];
   for (const p of results as { id: string; name: string }[]) {
-    const row = await c.env.DB.prepare("SELECT COUNT(DISTINCT match_id) AS n FROM match_players WHERE player_id = ?").bind(p.id).first<{ n: number }>();
+    const row = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM match_players WHERE player_id = ?").bind(p.id).first<{ n: number }>();
     out.push({ id: p.id, name: p.name, games: row?.n ?? 0 });
   }
   return c.json(out);
@@ -38,7 +38,6 @@ players.patch("/:id", async (c) => {
   if (!newName) return c.json({ message: "Name required" }, 400);
   const player = await c.env.DB.prepare("SELECT id, name FROM players WHERE id = ?").bind(id).first<{ id: string; name: string }>();
   if (!player) return c.json({ message: "Not found" }, 404);
-  const oldName = player.name;
   const { results } = await c.env.DB.prepare("SELECT id, name FROM players").all();
   const target = (results as { id: string; name: string }[]).find((r) => r.name.toLowerCase() === newName.toLowerCase() && r.id !== id);
   if (target) {
@@ -49,9 +48,7 @@ players.patch("/:id", async (c) => {
     ]);
     return c.json({ id: target.id, name: target.name });
   }
-  await c.env.DB.batch([
-    c.env.DB.prepare("UPDATE players SET name = ? WHERE id = ?").bind(newName, id),
-  ]);
+  await c.env.DB.prepare("UPDATE players SET name = ? WHERE id = ?").bind(newName, id).run();
   return c.json({ id, name: newName });
 });
 
