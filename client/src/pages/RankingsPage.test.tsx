@@ -40,6 +40,7 @@ describe("RankingsPage podium", () => {
     expect(screen.getByText("🥉")).toBeInTheDocument();
     // Rank 4 appears in the remaining list; ranks 1-3 do not.
     expect(screen.getAllByText("4").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /Priser/ })).toHaveAttribute("href", "/awards");
   });
 
   it("skips the podium with fewer than 3 rated players", async () => {

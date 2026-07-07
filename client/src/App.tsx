@@ -12,6 +12,7 @@ import { MatchFormPage } from "./pages/MatchFormPage";
 import { MatchDetailPage } from "./pages/MatchDetailPage";
 import { LiveMatchPage } from "./pages/LiveMatchPage";
 import { RivalryPage } from "./pages/RivalryPage";
+import { AwardsPage } from "./pages/AwardsPage";
 import { RankingsPage } from "./pages/RankingsPage";
 import { RosterPage } from "./pages/RosterPage";
 
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="/matches/:id" element={<MatchDetailPage />} />
               <Route path="/matches/:id/edit" element={<MatchFormPage />} />
               <Route path="/rankings" element={<RankingsPage />} />
+              <Route path="/awards" element={<AwardsPage />} />
               <Route path="/rivalry/:a/:b" element={<RivalryPage />} />
               <Route path="/roster" element={<RosterPage />} />
             </Route>

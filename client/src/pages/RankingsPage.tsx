@@ -1,7 +1,9 @@
 // client/src/pages/RankingsPage.tsx
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { Award } from "lucide-react";
 import { useMatches } from "../api/hooks";
+import { Button } from "../ui/Button";
 import { useAuth } from "../auth/AuthContext";
 import { rivalryPath } from "../stats/rivalry";
 import { computeElo } from "../stats/elo";
@@ -25,7 +27,10 @@ export function RankingsPage() {
   if (isLoading) return <SkeletonCards count={5} />;
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-2xl">Rangliste</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl">Rangliste</h2>
+        <Link to="/awards"><Button variant="ghost"><span className="inline-flex items-center gap-1.5"><Award size={16} />Priser</span></Button></Link>
+      </div>
       {ratings.length === 0 ? (
         <EmptyState emoji="🏆" title="Ranglisten er tom" hint="Log kampe med point for at se Elo-ratings." cta={{ label: "Log kamp", to: "/matches/new" }} />
       ) : (
