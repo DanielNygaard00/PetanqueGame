@@ -103,7 +103,7 @@ describe("finishMatch", () => {
 
 describe("toMatchInput", () => {
   it("maps date, time, arena, teams", () => {
-    let s = { ...playing(), arena: "Fælledparken", target: 3 };
+    let s: LiveState = { ...playing(), arena: "Fælledparken", target: 3 };
     s = scoreEnd(s, 1, 3);
     expect(toMatchInput(s)).toEqual({
       Dato: "2026-07-07",

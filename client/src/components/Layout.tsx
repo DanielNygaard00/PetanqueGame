@@ -1,14 +1,15 @@
 // client/src/components/Layout.tsx
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Home, List, CirclePlus, Trophy, Users } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { Button } from "../ui/Button";
 
 const NAV = [
-  { to: "/", label: "Oversigt" },
-  { to: "/matches", label: "Kampe" },
-  { to: "/matches/new", label: "Log" },
-  { to: "/rankings", label: "Rangliste" },
-  { to: "/roster", label: "Spillere" },
+  { to: "/", label: "Oversigt", Icon: Home },
+  { to: "/matches", label: "Kampe", Icon: List },
+  { to: "/matches/new", label: "Log", Icon: CirclePlus },
+  { to: "/rankings", label: "Rangliste", Icon: Trophy },
+  { to: "/roster", label: "Spillere", Icon: Users },
 ];
 
 export function Layout() {
@@ -20,7 +21,11 @@ export function Layout() {
       <header className="flex items-center justify-between border-b border-ink/10 bg-cream/80 px-4 py-3 backdrop-blur md:px-6 md:py-4">
         <Link to="/" className="font-display text-xl text-terracotta md:text-2xl">Pétanque · Apéro</Link>
         <nav className="hidden items-center gap-4 text-sm md:flex">
-          {NAV.map((n) => <Link key={n.to} to={n.to} className="hover:text-terracotta">{n.label}</Link>)}
+          {NAV.map((n) => (
+            <Link key={n.to} to={n.to} className="flex items-center gap-1.5 hover:text-terracotta">
+              <n.Icon size={16} />{n.label}
+            </Link>
+          ))}
           <Button variant="ghost" onClick={() => { logout(); nav("/login"); }}>Log ud</Button>
         </nav>
         <Button variant="ghost" className="md:hidden" onClick={() => { logout(); nav("/login"); }}>Log ud</Button>
@@ -39,7 +44,8 @@ export function Layout() {
           };
           const active = isActive(n.to);
           return (
-            <Link key={n.to} to={n.to} className={`flex flex-col items-center min-h-[44px] justify-center py-2 text-xs ${active ? "text-terracotta" : "text-ink/60"}`}>
+            <Link key={n.to} to={n.to} className={`flex flex-col items-center min-h-[44px] justify-center gap-0.5 py-1.5 text-[11px] ${active ? "text-terracotta" : "text-ink/60"}`}>
+              <n.Icon size={20} strokeWidth={active ? 2.5 : 2} />
               {n.label}
             </Link>
           );
