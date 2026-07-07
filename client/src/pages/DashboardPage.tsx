@@ -1,5 +1,5 @@
 // client/src/pages/DashboardPage.tsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   LineChart, Line,
@@ -16,29 +16,32 @@ import { Card } from "../ui/Card";
 import { MatchCard } from "../components/MatchCard";
 import { InsightsBar } from "../components/InsightsBar";
 import { InsightChips } from "../components/InsightChips";
+import { useAuth } from "../auth/AuthContext";
+import { playerDrinkStats } from "../stats/drinkStats";
 
 const TIME_LABELS: Record<string, string> = { morning: "Morgen (5–11)", afternoon: "Eftermiddag (12–16)", evening: "Aften (17–21)", night: "Nat (22–4)", unknown: "Ukendt tid" };
 
 export function DashboardPage() {
   const { data = [], isLoading } = useMatches();
+  const { user } = useAuth();
 
-  const [player, setPlayer] = useState("Alle");
+  const players = useMemo(() => {
+    const names = new Set<string>();
+    for (const m of data) for (const t of m.teams ?? []) for (const p of t.players) names.add(p.name);
+    return Array.from(names).sort();
+  }, [data]);
+
+  const [player, setPlayer] = useState<string>("");
+  useEffect(() => {
+    if (!player && players.length) setPlayer(players.includes(user?.username ?? "") ? user!.username : players[0]);
+  }, [players, player, user]);
+
   const [range, setRange] = useState<RangePreset>("all");
-
-  const players = useMemo(
-    () => ["Alle", ...Array.from(new Set(data.map((m) => (m.Spiller ?? "").trim()).filter(Boolean)))],
-    [data],
-  );
-
-  const filtered = useMemo(
-    () => player === "Alle" ? data : data.filter((m) => (m.Spiller ?? "").trim() === player),
-    [data, player],
-  );
-
-  const scoped = useMemo(() => filterByRange(filtered, range, new Date()), [filtered, range]);
-  const s = deriveStats(scoped);
-  const insights = useMemo(() => deriveInsights(scoped), [scoped]);
-  const h2h = useMemo(() => (player === "Alle" ? [] : headToHead(scoped, player)), [scoped, player]);
+  const scoped = useMemo(() => filterByRange(data, range, new Date()), [data, range]);
+  const s = useMemo(() => deriveStats(scoped, player), [scoped, player]);
+  const insights = useMemo(() => deriveInsights(scoped, player), [scoped, player]);
+  const h2h = useMemo(() => (player ? headToHead(scoped, player) : []), [scoped, player]);
+  const drinkers = useMemo(() => playerDrinkStats(scoped), [scoped]);
 
   if (isLoading) return <p>Henter…</p>;
 
@@ -87,8 +90,8 @@ export function DashboardPage() {
         <StatCard label="Drikke i alt" value={s.totalDrinks} hint="enheder" />
       </div>
 
-      {/* Head-to-head (only when specific player is selected and h2h has rows) */}
-      {player !== "Alle" && h2h.length > 0 && (
+      {/* Head-to-head (only when h2h has rows) */}
+      {h2h.length > 0 && (
         <Card>
           <h3 className="mb-3 text-lg">Head-to-head</h3>
 
@@ -239,6 +242,32 @@ export function DashboardPage() {
             </li>
           ))}
         </ul>
+      </Card>
+
+      {/* Drink stats */}
+      <Card>
+        <h3 className="mb-3 font-display text-lg">Hvem drikker mest</h3>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-ink/50">
+              <th className="pb-1 font-normal">Spiller</th>
+              <th className="pb-1 font-normal text-right">Enheder</th>
+              <th className="pb-1 font-normal text-right">Liter</th>
+              <th className="pb-1 font-normal text-right">Pr. kamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {drinkers.map((d) => (
+              <tr key={d.name} className="border-t border-ink/5">
+                <td className="py-1">{d.name}</td>
+                <td className="py-1 text-right">{d.units}</td>
+                <td className="py-1 text-right">{d.litres.toFixed(1)}</td>
+                <td className="py-1 text-right">{d.unitsPerGame.toFixed(1)}</td>
+              </tr>
+            ))}
+            {drinkers.length === 0 && <tr><td className="py-1 text-ink/40" colSpan={4}>Ingen data endnu</td></tr>}
+          </tbody>
+        </table>
       </Card>
 
       {/* Recent matches */}

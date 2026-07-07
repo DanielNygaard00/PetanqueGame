@@ -7,13 +7,13 @@ import { Badge } from "../ui/Badge";
 
 export function RankingsPage() {
   const { data = [], isLoading } = useMatches();
-  if (isLoading) return <p>Henter…</p>;
   const ratings = useMemo(() => computeElo(data), [data]);
+  if (isLoading) return <p>Henter…</p>;
   return (
     <div className="space-y-4">
       <h2 className="font-display text-2xl">Rangliste</h2>
       {ratings.length === 0 ? (
-        <Card><p className="text-ink/50">Ingen 1-mod-1 kampe endnu — log nogle for at se ratings.</p></Card>
+        <Card><p className="text-ink/50">Ingen kampe endnu — log nogle for at se ratings.</p></Card>
       ) : (
         <>
           {/* Desktop table */}
