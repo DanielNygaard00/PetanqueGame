@@ -10,6 +10,7 @@ import { Button } from "../ui/Button";
 import { getToken } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { matchPerspective } from "../stats/perspective";
+import { groupMatchesByMonth } from "../stats/monthGroups";
 import { EmptyState } from "../ui/EmptyState";
 import { SkeletonCards } from "../ui/Skeleton";
 
@@ -53,9 +54,18 @@ export function MatchesPage() {
       ) : filtered.length === 0 ? (
         <EmptyState emoji="🔍" title="Ingen kampe matcher" hint="Prøv en anden søgning." />
       ) : (
-        <div className="space-y-3">{filtered.map((m) => (
-          <MatchCard key={m.id} m={m} eloDelta={user?.username ? deltas.get(m.id)?.get(user.username) : undefined} />
-        ))}</div>
+        <div className="space-y-5">
+          {groupMatchesByMonth(filtered, user?.username).map((g) => (
+            <section key={g.key} className="space-y-3">
+              <h3 className="sticky top-0 z-[5] -mx-1 bg-cream/95 px-1 py-1.5 font-display text-sm text-ink/60 backdrop-blur">
+                {g.label} · {g.matches.length} kamp{g.matches.length === 1 ? "" : "e"}{g.participated ? ` · ${g.wins} ${g.wins === 1 ? "sejr" : "sejre"}` : ""}
+              </h3>
+              {g.matches.map((mm) => (
+                <MatchCard key={mm.id} m={mm} eloDelta={user?.username ? deltas.get(mm.id)?.get(user.username) : undefined} />
+              ))}
+            </section>
+          ))}
+        </div>
       )}
     </div>
   );
