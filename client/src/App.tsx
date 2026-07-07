@@ -10,6 +10,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MatchesPage } from "./pages/MatchesPage";
 import { MatchFormPage } from "./pages/MatchFormPage";
 import { MatchDetailPage } from "./pages/MatchDetailPage";
+import { LiveMatchPage } from "./pages/LiveMatchPage";
 import { RankingsPage } from "./pages/RankingsPage";
 import { RosterPage } from "./pages/RosterPage";
 
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/matches" element={<MatchesPage />} />
               <Route path="/matches/new" element={<MatchFormPage />} />
+              <Route path="/live" element={<LiveMatchPage />} />
               <Route path="/matches/:id" element={<MatchDetailPage />} />
               <Route path="/matches/:id/edit" element={<MatchFormPage />} />
               <Route path="/rankings" element={<RankingsPage />} />

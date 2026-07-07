@@ -1,5 +1,6 @@
 // client/src/pages/MatchesPage.tsx
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useMatches } from "../api/hooks";
 import { computeEloWithHistory } from "../stats/elo";
 import { MatchCard } from "../components/MatchCard";
@@ -37,7 +38,10 @@ export function MatchesPage() {
       <div className="flex flex-wrap items-end gap-3">
         <Input label="Søg" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-64" />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={onlyWins} onChange={(e) => setOnlyWins(e.target.checked)} /> Kun sejre</label>
-        <div className="ml-auto w-full sm:w-auto"><Button variant="ghost" className="w-full sm:w-auto" onClick={exportCsv}>Eksportér CSV</Button></div>
+        <div className="ml-auto flex w-full gap-2 sm:w-auto">
+          <Link to="/live" className="flex-1 sm:flex-none"><Button variant="ghost" className="w-full">Start live kamp</Button></Link>
+          <Button variant="ghost" className="flex-1 sm:flex-none" onClick={exportCsv}>Eksportér CSV</Button>
+        </div>
       </div>
       {isLoading ? <p>Henter…</p> : <div className="space-y-3">{filtered.map((m) => (
         <MatchCard key={m.id} m={m} eloDelta={user?.username ? deltas.get(m.id)?.get(user.username) : undefined} />
