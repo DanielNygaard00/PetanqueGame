@@ -8,6 +8,9 @@ import { Badge } from "../ui/Badge";
 export function RankingsPage() {
   const { data = [], isLoading } = useMatches();
   const ratings = useMemo(() => computeElo(data), [data]);
+  const podium = ratings.length >= 3 ? ratings.slice(0, 3) : [];
+  const rest = podium.length ? ratings.slice(3) : ratings;
+  const startRank = podium.length ? 4 : 1;
   if (isLoading) return <p>Henter…</p>;
   return (
     <div className="space-y-4">
@@ -16,6 +19,23 @@ export function RankingsPage() {
         <Card><p className="text-ink/50">Ingen kampe endnu — log nogle for at se ratings.</p></Card>
       ) : (
         <>
+          {podium.length === 3 && (
+            <div className="grid grid-cols-3 items-end gap-2">
+              {[
+                { p: podium[1], medal: "🥈", accent: "border-ink/30", pad: "pt-4" },
+                { p: podium[0], medal: "🥇", accent: "border-gold", pad: "pt-8" },
+                { p: podium[2], medal: "🥉", accent: "border-terracotta/60", pad: "pt-2" },
+              ].map(({ p, medal, accent, pad }) => (
+                <Card key={p.name} className={`flex flex-col items-center gap-1 border-2 text-center ${accent} ${pad}`}>
+                  <span className="text-2xl">{medal}</span>
+                  <span className="max-w-full truncate font-medium">{p.name}</span>
+                  <span className="font-display text-2xl text-terracotta">{p.elo}</span>
+                  <span className="text-xs text-ink/50">{p.games} kampe</span>
+                </Card>
+              ))}
+            </div>
+          )}
+
           {/* Desktop table */}
           <Card className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
@@ -23,9 +43,9 @@ export function RankingsPage() {
                 <th className="py-2">#</th><th>Spiller</th><th>Elo</th><th>Kampe</th><th>V–T</th><th>Sejr%</th><th>Margin</th><th>Form</th>
               </tr></thead>
               <tbody>
-                {ratings.map((p, i) => (
+                {rest.map((p, i) => (
                   <tr key={p.name} className="border-t border-ink/10">
-                    <td className="py-2">{i + 1}</td>
+                    <td className="py-2">{startRank + i}</td>
                     <td className="font-medium">{p.name} {p.provisional && <Badge tone="group">foreløbig</Badge>}</td>
                     <td className="font-display text-terracotta">{p.elo}</td>
                     <td>{p.games}</td>
@@ -41,9 +61,9 @@ export function RankingsPage() {
 
           {/* Mobile card list */}
           <div className="space-y-2 md:hidden">
-            {ratings.map((p, i) => (
+            {rest.map((p, i) => (
               <Card key={p.name} className="flex items-start gap-3">
-                <span className="w-6 shrink-0 pt-0.5 text-sm text-ink/40 font-medium">{i + 1}</span>
+                <span className="w-6 shrink-0 pt-0.5 text-sm text-ink/40 font-medium">{startRank + i}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-ink">{p.name}</span>
