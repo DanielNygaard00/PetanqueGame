@@ -6,11 +6,18 @@ export type PlayerRating = {
   winRate: number; avgMargin: number; form: ("W" | "L" | "D")[]; provisional: boolean;
 };
 
-export function computeElo(
+export type EloHistory = {
+  ratings: PlayerRating[];
+  /** matchId -> playerName -> rounded Elo change from that match */
+  deltas: Map<string, Map<string, number>>;
+};
+
+export function computeEloWithHistory(
   matches: Match[],
   opts: { base?: number; k?: number; provisionalGames?: number } = {},
-): PlayerRating[] {
+): EloHistory {
   const base = opts.base ?? 1000, k = opts.k ?? 24, provisionalGames = opts.provisionalGames ?? 5;
+  const deltas = new Map<string, Map<string, number>>();
 
   const eligible = matches
     .filter((m) => (m.teams?.length ?? 0) >= 2)
@@ -64,10 +71,15 @@ export function computeElo(
         }
       }
     }
-    for (const [name, d] of delta) get(name).elo += d;
+    const matchDeltas = new Map<string, number>();
+    for (const [name, d] of delta) {
+      get(name).elo += d;
+      matchDeltas.set(name, Math.round(d));
+    }
+    if (matchDeltas.size > 0) deltas.set(m.id, matchDeltas);
   }
 
-  return [...S.values()].map((p) => ({
+  const ratings = [...S.values()].map((p) => ({
     ...p,
     elo: Math.round(p.elo),
     winRate: p.games ? (p.wins / p.games) * 100 : 0,
@@ -75,4 +87,13 @@ export function computeElo(
     form: p.form.slice(-5),
     provisional: p.games < provisionalGames,
   })).sort((a, b) => b.elo - a.elo);
+
+  return { ratings, deltas };
+}
+
+export function computeElo(
+  matches: Match[],
+  opts: { base?: number; k?: number; provisionalGames?: number } = {},
+): PlayerRating[] {
+  return computeEloWithHistory(matches, opts).ratings;
 }

@@ -1,6 +1,6 @@
 // client/src/stats/elo.test.ts
 import { describe, it, expect } from "vitest";
-import { computeElo } from "./elo";
+import { computeElo, computeEloWithHistory } from "./elo";
 import type { Match } from "../api/types";
 
 const pl = (n: string) => ({ id: n, name: n });
@@ -49,5 +49,42 @@ describe("computeElo", () => {
     const r = computeElo([oneVone("Ida", 13, "Bo", 5, 0)]);
     expect(r.find((p) => p.name === "Ida")!.avgMargin).toBe(8);
     expect(r.find((p) => p.name === "Bo")!.avgMargin).toBe(-8);
+  });
+});
+
+describe("computeEloWithHistory", () => {
+  it("returns positive delta for the winner and negative for the loser", () => {
+    const { deltas } = computeEloWithHistory([oneVone("Ida", 13, "Bo", 5, 0)]);
+    const d = deltas.get("0")!;
+    expect(d.get("Ida")).toBeGreaterThan(0);
+    expect(d.get("Bo")).toBeLessThan(0);
+  });
+
+  it("is zero-sum per 1v1 match", () => {
+    const { deltas } = computeEloWithHistory([oneVone("Ida", 13, "Bo", 5, 0)]);
+    const d = deltas.get("0")!;
+    expect(d.get("Ida")! + d.get("Bo")!).toBe(0);
+  });
+
+  it("gives a bigger reward for beating a stronger opponent later in history", () => {
+    const history = Array.from({ length: 5 }, (_, i) => oneVone("Ida", 13, "Bo", 5, i));
+    history.push(oneVone("Bo", 13, "Ida", 5, 5));
+    const { deltas } = computeEloWithHistory(history);
+    // Bo (underdog by now) beats Ida: Bo's win pays more than K/2 = 12.
+    expect(deltas.get("5")!.get("Bo")).toBeGreaterThan(12);
+  });
+
+  it("omits matches without two scored teams", () => {
+    const m: Match = { id: "x", Dato: "2026-06-01", teams: [
+      { team: 0, score: null, won: false, players: [pl("Ida")] },
+      { team: 1, score: null, won: false, players: [pl("Bo")] },
+    ] };
+    const { deltas } = computeEloWithHistory([m]);
+    expect(deltas.has("x")).toBe(false);
+  });
+
+  it("ratings match computeElo output", () => {
+    const ms = Array.from({ length: 3 }, (_, i) => oneVone("Ida", 13, "Bo", 5, i));
+    expect(computeEloWithHistory(ms).ratings).toEqual(computeElo(ms));
   });
 });
