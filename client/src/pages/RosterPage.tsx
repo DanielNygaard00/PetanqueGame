@@ -4,6 +4,7 @@ import { usePlayers, useRenamePlayer, useMergePlayers } from "../api/hooks";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
+import { SkeletonCards } from "../ui/Skeleton";
 
 export function RosterPage() {
   const { data = [], isLoading } = usePlayers();
@@ -14,7 +15,7 @@ export function RosterPage() {
   const [mergeSrc, setMergeSrc] = useState("");
   const [mergeInto, setMergeInto] = useState("");
 
-  if (isLoading) return <p>Henter…</p>;
+  if (isLoading) return <SkeletonCards count={4} />;
   return (
     <div className="space-y-4">
       <h2 className="font-display text-2xl">Spillere</h2>

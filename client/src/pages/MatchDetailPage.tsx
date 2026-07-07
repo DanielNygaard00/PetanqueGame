@@ -8,6 +8,7 @@ import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { EloDeltaChip } from "../components/EloDeltaChip";
+import { SkeletonCards } from "../ui/Skeleton";
 import type { Drink } from "../api/types";
 
 const drinkLabel = (d: Drink) =>
@@ -19,7 +20,7 @@ export function MatchDetailPage() {
   const { deltas } = useMemo(() => computeEloWithHistory(matches), [matches]);
   const m = matches.find((x) => x.id === id);
 
-  if (isLoading) return <p>Henter…</p>;
+  if (isLoading) return <SkeletonCards count={3} />;
   if (!m) {
     return (
       <div className="space-y-3">

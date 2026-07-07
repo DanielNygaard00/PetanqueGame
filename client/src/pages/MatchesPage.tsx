@@ -10,6 +10,8 @@ import { Button } from "../ui/Button";
 import { getToken } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { matchPerspective } from "../stats/perspective";
+import { EmptyState } from "../ui/EmptyState";
+import { SkeletonCards } from "../ui/Skeleton";
 
 export function MatchesPage() {
   const { data = [], isLoading } = useMatches();
@@ -44,9 +46,17 @@ export function MatchesPage() {
           <Button variant="ghost" className="flex-1 sm:flex-none" onClick={exportCsv}><span className="inline-flex items-center gap-1.5"><Download size={16} />Eksportér CSV</span></Button>
         </div>
       </div>
-      {isLoading ? <p>Henter…</p> : <div className="space-y-3">{filtered.map((m) => (
-        <MatchCard key={m.id} m={m} eloDelta={user?.username ? deltas.get(m.id)?.get(user.username) : undefined} />
-      ))}</div>}
+      {isLoading ? (
+        <SkeletonCards count={4} />
+      ) : data.length === 0 ? (
+        <EmptyState emoji="🎯" title="Ingen kampe endnu" hint="Grib kuglerne og log jeres første kamp." cta={{ label: "Log kamp", to: "/matches/new" }} />
+      ) : filtered.length === 0 ? (
+        <EmptyState emoji="🔍" title="Ingen kampe matcher" hint="Prøv en anden søgning." />
+      ) : (
+        <div className="space-y-3">{filtered.map((m) => (
+          <MatchCard key={m.id} m={m} eloDelta={user?.username ? deltas.get(m.id)?.get(user.username) : undefined} />
+        ))}</div>
+      )}
     </div>
   );
 }

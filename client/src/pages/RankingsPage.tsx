@@ -4,6 +4,8 @@ import { useMatches } from "../api/hooks";
 import { computeElo } from "../stats/elo";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
+import { EmptyState } from "../ui/EmptyState";
+import { SkeletonCards } from "../ui/Skeleton";
 
 export function RankingsPage() {
   const { data = [], isLoading } = useMatches();
@@ -11,12 +13,12 @@ export function RankingsPage() {
   const podium = ratings.length >= 3 ? ratings.slice(0, 3) : [];
   const rest = podium.length ? ratings.slice(3) : ratings;
   const startRank = podium.length ? 4 : 1;
-  if (isLoading) return <p>Henter…</p>;
+  if (isLoading) return <SkeletonCards count={5} />;
   return (
     <div className="space-y-4">
       <h2 className="font-display text-2xl">Rangliste</h2>
       {ratings.length === 0 ? (
-        <Card><p className="text-ink/50">Ingen kampe endnu — log nogle for at se ratings.</p></Card>
+        <EmptyState emoji="🏆" title="Ranglisten er tom" hint="Log kampe med point for at se Elo-ratings." cta={{ label: "Log kamp", to: "/matches/new" }} />
       ) : (
         <>
           {podium.length === 3 && (

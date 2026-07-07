@@ -18,6 +18,7 @@ import { InsightsBar } from "../components/InsightsBar";
 import { InsightChips } from "../components/InsightChips";
 import { useAuth } from "../auth/AuthContext";
 import { playerDrinkStats } from "../stats/drinkStats";
+import { SkeletonCards } from "../ui/Skeleton";
 
 const TIME_LABELS: Record<string, string> = { morning: "Morgen (5–11)", afternoon: "Eftermiddag (12–16)", evening: "Aften (17–21)", night: "Nat (22–4)", unknown: "Ukendt tid" };
 
@@ -43,7 +44,7 @@ export function DashboardPage() {
   const h2h = useMemo(() => (player ? headToHead(scoped, player) : []), [scoped, player]);
   const drinkers = useMemo(() => playerDrinkStats(scoped), [scoped]);
 
-  if (isLoading) return <p>Henter…</p>;
+  if (isLoading) return <SkeletonCards count={4} />;
 
   return (
     <div className="space-y-6">
