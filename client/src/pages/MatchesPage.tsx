@@ -1,6 +1,7 @@
 // client/src/pages/MatchesPage.tsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMatches } from "../api/hooks";
+import { computeEloWithHistory } from "../stats/elo";
 import { MatchCard } from "../components/MatchCard";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
@@ -11,6 +12,7 @@ import { matchPerspective } from "../stats/perspective";
 export function MatchesPage() {
   const { data = [], isLoading } = useMatches();
   const { user } = useAuth();
+  const { deltas } = useMemo(() => computeEloWithHistory(data), [data]);
   const [q, setQ] = useState("");
   const [onlyWins, setOnlyWins] = useState(false);
   const filtered = data.filter((m) => {
@@ -37,7 +39,9 @@ export function MatchesPage() {
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={onlyWins} onChange={(e) => setOnlyWins(e.target.checked)} /> Kun sejre</label>
         <div className="ml-auto w-full sm:w-auto"><Button variant="ghost" className="w-full sm:w-auto" onClick={exportCsv}>Eksportér CSV</Button></div>
       </div>
-      {isLoading ? <p>Henter…</p> : <div className="space-y-3">{filtered.map((m) => <MatchCard key={m.id} m={m} />)}</div>}
+      {isLoading ? <p>Henter…</p> : <div className="space-y-3">{filtered.map((m) => (
+        <MatchCard key={m.id} m={m} eloDelta={user?.username ? deltas.get(m.id)?.get(user.username) : undefined} />
+      ))}</div>}
     </div>
   );
 }

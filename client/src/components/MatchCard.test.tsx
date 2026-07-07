@@ -18,4 +18,31 @@ describe("MatchCard", () => {
     expect(screen.getByText(/18/)).toBeInTheDocument();
     expect(screen.getByText(/21/)).toBeInTheDocument();
   });
+
+  it("shows a positive Elo delta in olive", () => {
+    render(<MemoryRouter><MatchCard m={m} eloDelta={14} /></MemoryRouter>);
+    const chip = screen.getByText("+14");
+    expect(chip).toHaveClass("text-olive");
+  });
+
+  it("shows a negative Elo delta in bordeaux with typographic minus", () => {
+    render(<MemoryRouter><MatchCard m={m} eloDelta={-9} /></MemoryRouter>);
+    const chip = screen.getByText("−9");
+    expect(chip).toHaveClass("text-bordeaux");
+  });
+
+  it("shows ±0 for a zero delta", () => {
+    render(<MemoryRouter><MatchCard m={m} eloDelta={0} /></MemoryRouter>);
+    expect(screen.getByText("±0")).toBeInTheDocument();
+  });
+
+  it("hides the chip when eloDelta is absent", () => {
+    render(<MemoryRouter><MatchCard m={m} /></MemoryRouter>);
+    expect(screen.queryByText(/±0|\+\d|−\d/)).not.toBeInTheDocument();
+  });
+
+  it("links the card to the match detail page", () => {
+    render(<MemoryRouter><MatchCard m={m} /></MemoryRouter>);
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/matches/1");
+  });
 });
