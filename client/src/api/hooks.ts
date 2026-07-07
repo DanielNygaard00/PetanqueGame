@@ -41,6 +41,24 @@ export function useAddOption(collection: string) {
   });
 }
 
+export function useRenameOption(collection: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => (await api.patch(`/options/${collection}/${id}`, { name })).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["options", collection] });
+      qc.invalidateQueries({ queryKey: ["matches"] }); // rename cascades into match data
+    },
+  });
+}
+export function useDeleteOption(collection: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => (await api.delete(`/options/${collection}/${id}`)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["options", collection] }),
+  });
+}
+
 export function usePlayers() {
   return useQuery({ queryKey: ["players"], queryFn: async () => (await api.get<Player[]>("/players")).data });
 }

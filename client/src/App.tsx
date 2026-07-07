@@ -13,6 +13,7 @@ import { MatchDetailPage } from "./pages/MatchDetailPage";
 import { LiveMatchPage } from "./pages/LiveMatchPage";
 import { RivalryPage } from "./pages/RivalryPage";
 import { AwardsPage } from "./pages/AwardsPage";
+import { OptionsPage } from "./pages/OptionsPage";
 import { RankingsPage } from "./pages/RankingsPage";
 import { RosterPage } from "./pages/RosterPage";
 
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="/awards" element={<AwardsPage />} />
               <Route path="/rivalry/:a/:b" element={<RivalryPage />} />
               <Route path="/roster" element={<RosterPage />} />
+              <Route path="/options" element={<OptionsPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

@@ -1,5 +1,7 @@
 // client/src/pages/RosterPage.tsx
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Settings } from "lucide-react";
 import { usePlayers, useRenamePlayer, useMergePlayers } from "../api/hooks";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
@@ -18,7 +20,10 @@ export function RosterPage() {
   if (isLoading) return <SkeletonCards count={4} />;
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-2xl">Spillere</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl">Spillere</h2>
+        <Link to="/options"><Button variant="ghost"><span className="inline-flex items-center gap-1.5"><Settings size={16} />Indstillinger</span></Button></Link>
+      </div>
 
       <Card>
         <ul className="divide-y divide-ink/10">
