@@ -21,6 +21,7 @@ import { playerDrinkStats } from "../stats/drinkStats";
 import { SkeletonCards } from "../ui/Skeleton";
 import { rivalryPath } from "../stats/rivalry";
 import { winRateByDrinkType } from "../stats/drinkPerformance";
+import { eloTimeline } from "../stats/elo";
 
 const TIME_LABELS: Record<string, string> = { morning: "Morgen (5–11)", afternoon: "Eftermiddag (12–16)", evening: "Aften (17–21)", night: "Nat (22–4)", unknown: "Ukendt tid" };
 
@@ -49,6 +50,7 @@ export function DashboardPage() {
     () => (player ? winRateByDrinkType(scoped, player).filter((t) => t.games >= 2) : []),
     [scoped, player],
   );
+  const eloSeries = useMemo(() => (player ? eloTimeline(data, player) : []), [data, player]);
 
   if (isLoading) return <SkeletonCards count={4} />;
 
@@ -152,6 +154,24 @@ export function DashboardPage() {
           </LineChart>
         </ResponsiveContainer>
       </Card>
+
+      {/* Elo over time (full history — Elo is cumulative, so no date-range slice) */}
+      {eloSeries.length >= 2 && (
+        <Card>
+          <h3 className="mb-3 font-display text-lg">Elo over tid</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={eloSeries}>
+              <XAxis dataKey="game" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} domain={["auto", "auto"]} />
+              <Tooltip labelFormatter={(g) => {
+                const p = eloSeries[Number(g) - 1];
+                return p?.dato ? `Kamp ${g} · ${p.dato}` : `Kamp ${g}`;
+              }} />
+              <Line type="monotone" dataKey="elo" name="Elo" stroke="#C65D3B" dot />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
 
       {/* Sober-vs-tipsy */}
       <Card>

@@ -12,6 +12,16 @@ export type EloHistory = {
   deltas: Map<string, Map<string, number>>;
 };
 
+function eligibleChrono(matches: Match[]) {
+  return matches
+    .filter((m) => (m.teams?.length ?? 0) >= 2)
+    .map((m, i) => ({ m, i }))
+    .sort((a, b) => {
+      const ka = `${a.m.Dato ?? ""}${a.m.Tid ?? ""}`, kb = `${b.m.Dato ?? ""}${b.m.Tid ?? ""}`;
+      return ka === kb ? a.i - b.i : ka < kb ? -1 : 1;
+    });
+}
+
 export function computeEloWithHistory(
   matches: Match[],
   opts: { base?: number; k?: number; provisionalGames?: number } = {},
@@ -19,13 +29,7 @@ export function computeEloWithHistory(
   const base = opts.base ?? 1000, k = opts.k ?? 24, provisionalGames = opts.provisionalGames ?? 5;
   const deltas = new Map<string, Map<string, number>>();
 
-  const eligible = matches
-    .filter((m) => (m.teams?.length ?? 0) >= 2)
-    .map((m, i) => ({ m, i }))
-    .sort((a, b) => {
-      const ka = `${a.m.Dato ?? ""}${a.m.Tid ?? ""}`, kb = `${b.m.Dato ?? ""}${b.m.Tid ?? ""}`;
-      return ka === kb ? a.i - b.i : ka < kb ? -1 : 1;
-    });
+  const eligible = eligibleChrono(matches);
 
   const S = new Map<string, PlayerRating>();
   const marginSum = new Map<string, number>(), marginN = new Map<string, number>();
@@ -96,4 +100,21 @@ export function computeElo(
   opts: { base?: number; k?: number; provisionalGames?: number } = {},
 ): PlayerRating[] {
   return computeEloWithHistory(matches, opts).ratings;
+}
+
+export type EloPoint = { game: number; elo: number; dato?: string };
+
+// Rating trajectory from summed per-match (rounded) deltas — chart-grade, may
+// drift ±1 from the exact rating on long histories.
+export function eloTimeline(matches: Match[], player: string): EloPoint[] {
+  const { deltas } = computeEloWithHistory(matches);
+  const points: EloPoint[] = [];
+  let elo = 1000;
+  for (const { m } of eligibleChrono(matches)) {
+    const d = deltas.get(m.id)?.get(player);
+    if (d === undefined) continue;
+    elo += d;
+    points.push({ game: points.length + 1, elo, dato: m.Dato });
+  }
+  return points;
 }

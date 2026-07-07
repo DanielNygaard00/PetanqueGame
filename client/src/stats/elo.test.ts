@@ -1,6 +1,6 @@
 // client/src/stats/elo.test.ts
 import { describe, it, expect } from "vitest";
-import { computeElo, computeEloWithHistory } from "./elo";
+import { computeElo, computeEloWithHistory, eloTimeline } from "./elo";
 import type { Match } from "../api/types";
 
 const pl = (n: string) => ({ id: n, name: n });
@@ -86,5 +86,25 @@ describe("computeEloWithHistory", () => {
   it("ratings match computeElo output", () => {
     const ms = Array.from({ length: 3 }, (_, i) => oneVone("Ida", 13, "Bo", 5, i));
     expect(computeEloWithHistory(ms).ratings).toEqual(computeElo(ms));
+  });
+});
+
+describe("eloTimeline", () => {
+  it("accumulates from base 1000 in chronological order", () => {
+    const tl = eloTimeline(Array.from({ length: 3 }, (_, i) => oneVone("Ida", 13, "Bo", 5, i)), "Ida");
+    expect(tl).toHaveLength(3);
+    expect(tl[0].elo).toBe(1012);
+    expect(tl[1].elo).toBeGreaterThan(tl[0].elo);
+    expect(tl[0].game).toBe(1);
+    expect(tl[0].dato).toBe("2026-06-01");
+  });
+
+  it("only includes matches the player was rated in", () => {
+    const ms = [oneVone("Ida", 13, "Bo", 5, 0), oneVone("Cy", 13, "Ann", 5, 1)];
+    expect(eloTimeline(ms, "Ida")).toHaveLength(1);
+  });
+
+  it("returns empty for an unknown player", () => {
+    expect(eloTimeline([oneVone("Ida", 13, "Bo", 5, 0)], "Ukendt")).toEqual([]);
   });
 });
