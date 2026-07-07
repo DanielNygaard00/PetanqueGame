@@ -10,12 +10,23 @@ import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { useAuth } from "../auth/AuthContext";
+import { useFormDraft } from "../hooks/useFormDraft";
 import type { Match, Drink } from "../api/types";
 
 type FormState = {
   Dato?: string; Tid?: string; Arena?: string; "Spillets genstande"?: string;
   teams: TeamInput[]; drinks: Drink[];
 };
+
+export const MATCH_DRAFT_KEY = "matchFormDraft:v1";
+
+export function formHasSubstance(f: FormState): boolean {
+  if (f.drinks.length > 0) return true;
+  if (f["Spillets genstande"]) return true;
+  if (f.teams.some((t) => t.score != null)) return true;
+  if ((f.teams[0]?.players.length ?? 0) > 1) return true;
+  return f.teams.slice(1).some((t) => t.players.length > 0);
+}
 
 function toFormState(m: Match): FormState {
   return {
@@ -48,6 +59,10 @@ export function MatchFormPage() {
 
   const [form, setForm] = useState<FormState>({ teams: [{ score: null, players: [] }, { score: null, players: [] }], drinks: [] });
   const [error, setError] = useState<string | null>(null);
+  const draft = useFormDraft<FormState>(MATCH_DRAFT_KEY, form, setForm, {
+    enabled: !id,
+    hasSubstance: formHasSubstance,
+  });
   const last = matches[0];
 
   useEffect(() => {
@@ -72,6 +87,17 @@ export function MatchFormPage() {
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
   const participantNames = form.teams.flatMap((t) => t.players);
 
+  function discardDraft() {
+    draft.clear();
+    setForm({
+      Dato: ymd(new Date()),
+      Tid: new Date().toTimeString().slice(0, 5),
+      Arena: last?.Arena,
+      teams: [{ score: null, players: user?.username ? [user.username] : [] }, { score: null, players: [] }],
+      drinks: [],
+    });
+  }
+
   function validate(): string | null {
     if (!form.Dato) return "Dato er påkrævet";
     if (form.teams.length < 2) return "Der skal være mindst to hold";
@@ -90,13 +116,18 @@ export function MatchFormPage() {
       teams: form.teams, drinks: form.drinks,
     };
     if (id) await update.mutateAsync({ id, ...payload });
-    else await create.mutateAsync(payload);
+    else { await create.mutateAsync(payload); draft.clear(); }
     nav("/matches");
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
       {error && <p className="text-red-600 text-sm">{error}</p>}
+      {draft.restored && (
+        <p className="text-sm text-ink/60">
+          Kladde gendannet · <button type="button" className="text-terracotta underline" onClick={discardDraft}>Ryd</button>
+        </p>
+      )}
       <Card className="space-y-3">
         <Input label="Dato" type="date" value={form.Dato ?? ""} onChange={(e) => set({ Dato: e.target.value })} />
         <Input label="Tid" type="time" value={form.Tid ?? ""} onChange={(e) => set({ Tid: e.target.value })} />

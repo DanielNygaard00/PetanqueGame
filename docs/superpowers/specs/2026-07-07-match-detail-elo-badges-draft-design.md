@@ -57,7 +57,7 @@ Files: new `client/src/hooks/useFormDraft.ts` (or colocated under `client/src`),
 
 - Applies only to `/matches/new` (no `id` param). Edit mode never reads or writes drafts.
 - Hook `useFormDraft` persists `FormState` to `localStorage` under key `matchFormDraft:v1`, debounced ~500 ms.
-- Substance gate: a draft is only written when the form has meaningful content — any team has players beyond the auto-prefilled logged-in user alone with no other data, any drinks exist, or Arena/"Spillets genstande" is set. Rationale: prevents an untouched default form from persisting as a junk draft.
+- Substance gate: a draft is only written when the form has meaningful content — any drinks, "Spillets genstande" set, any team score set, a second player on team 0, or any player on a later team. Arena and date/time do NOT count: they are auto-prefilled, so counting them would persist every untouched visit as a junk draft.
 - Restore happens on mount, before user interaction. The existing defaults effect uses `??` and an empty-team check, so restored values are not overwritten.
 - When a draft is restored, the form shows a small note "Kladde gendannet" with a "Ryd" action that clears storage and resets the form to defaults.
 - The draft is cleared on successful submit. Storage failures (quota, disabled) are swallowed silently — drafts are best-effort.
