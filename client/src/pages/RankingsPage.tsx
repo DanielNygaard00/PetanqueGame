@@ -1,6 +1,9 @@
 // client/src/pages/RankingsPage.tsx
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useMatches } from "../api/hooks";
+import { useAuth } from "../auth/AuthContext";
+import { rivalryPath } from "../stats/rivalry";
 import { computeElo } from "../stats/elo";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
@@ -9,7 +12,13 @@ import { SkeletonCards } from "../ui/Skeleton";
 
 export function RankingsPage() {
   const { data = [], isLoading } = useMatches();
+  const { user } = useAuth();
+  const viewer = user?.username;
   const ratings = useMemo(() => computeElo(data), [data]);
+  const nameCell = (name: string) =>
+    viewer && name !== viewer
+      ? <Link to={rivalryPath(viewer, name)} className="hover:text-terracotta">{name}</Link>
+      : <>{name}</>;
   const podium = ratings.length >= 3 ? ratings.slice(0, 3) : [];
   const rest = podium.length ? ratings.slice(3) : ratings;
   const startRank = podium.length ? 4 : 1;
@@ -48,7 +57,7 @@ export function RankingsPage() {
                 {rest.map((p, i) => (
                   <tr key={p.name} className="border-t border-ink/10">
                     <td className="py-2">{startRank + i}</td>
-                    <td className="font-medium">{p.name} {p.provisional && <Badge tone="group">foreløbig</Badge>}</td>
+                    <td className="font-medium">{nameCell(p.name)} {p.provisional && <Badge tone="group">foreløbig</Badge>}</td>
                     <td className="font-display text-terracotta">{p.elo}</td>
                     <td>{p.games}</td>
                     <td>{p.wins}–{p.losses}</td>
@@ -68,7 +77,7 @@ export function RankingsPage() {
                 <span className="w-6 shrink-0 pt-0.5 text-sm text-ink/40 font-medium">{startRank + i}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-ink">{p.name}</span>
+                    <span className="font-medium text-ink">{nameCell(p.name)}</span>
                     {p.provisional && <Badge tone="group">foreløbig</Badge>}
                     <span className="font-display text-lg text-terracotta ml-auto">{p.elo}</span>
                   </div>

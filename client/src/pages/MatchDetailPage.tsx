@@ -9,6 +9,8 @@ import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { EloDeltaChip } from "../components/EloDeltaChip";
 import { SkeletonCards } from "../ui/Skeleton";
+import { useAuth } from "../auth/AuthContext";
+import { rivalryPath } from "../stats/rivalry";
 import type { Drink } from "../api/types";
 
 const drinkLabel = (d: Drink) =>
@@ -16,6 +18,8 @@ const drinkLabel = (d: Drink) =>
 
 export function MatchDetailPage() {
   const { id } = useParams();
+  const { user } = useAuth();
+  const viewer = user?.username;
   const { data: matches = [], isLoading } = useMatches();
   const { deltas } = useMemo(() => computeEloWithHistory(matches), [matches]);
   const m = matches.find((x) => x.id === id);
@@ -64,7 +68,9 @@ export function MatchDetailPage() {
                 const d = matchDeltas?.get(p.name);
                 return (
                   <li key={p.id} className="flex items-center justify-between text-sm">
-                    <span>{p.name}</span>
+                    {viewer && p.name !== viewer
+                      ? <Link to={rivalryPath(viewer, p.name)} className="hover:text-terracotta underline decoration-ink/20 underline-offset-2">{p.name}</Link>
+                      : <span>{p.name}</span>}
                     {d !== undefined && <EloDeltaChip delta={d} suffix="Elo" />}
                   </li>
                 );

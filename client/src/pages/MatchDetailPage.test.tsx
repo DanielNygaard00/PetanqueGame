@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MatchDetailPage } from "./MatchDetailPage";
+import { AuthProvider } from "../auth/AuthContext";
 import { api } from "../api/client";
 import type { Match } from "../api/types";
 
@@ -24,11 +25,13 @@ function renderAt(path: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/matches/:id" element={<MatchDetailPage />} />
-        </Routes>
-      </MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route path="/matches/:id" element={<MatchDetailPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
     </QueryClientProvider>,
   );
 }
@@ -43,6 +46,8 @@ describe("MatchDetailPage", () => {
     expect(screen.getByText("+12 Elo")).toBeInTheDocument();
     expect(screen.getByText("−12 Elo")).toBeInTheDocument();
     expect(screen.getByText("Rediger")).toBeInTheDocument();
+    // No logged-in user in tests -> player names stay plain, no rivalry links
+    expect(screen.queryByRole("link", { name: "Bo" })).not.toBeInTheDocument();
   });
 
   it("groups drinks by player with a Fælles fallback", async () => {

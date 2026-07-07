@@ -19,6 +19,7 @@ import { InsightChips } from "../components/InsightChips";
 import { useAuth } from "../auth/AuthContext";
 import { playerDrinkStats } from "../stats/drinkStats";
 import { SkeletonCards } from "../ui/Skeleton";
+import { rivalryPath } from "../stats/rivalry";
 
 const TIME_LABELS: Record<string, string> = { morning: "Morgen (5–11)", afternoon: "Eftermiddag (12–16)", evening: "Aften (17–21)", night: "Nat (22–4)", unknown: "Ukendt tid" };
 
@@ -109,7 +110,7 @@ export function DashboardPage() {
             <tbody>
               {h2h.map((row) => (
                 <tr key={row.opponent} className="border-t border-ink/5">
-                  <td className="py-1">{row.opponent}</td>
+                  <td className="py-1"><Link to={rivalryPath(player, row.opponent)} className="text-terracotta">{row.opponent}</Link></td>
                   <td className="py-1 text-right">{row.wins}–{row.losses}</td>
                   <td className="py-1 text-right">{row.winRate.toFixed(0)}%</td>
                   <td className="py-1 text-right">{row.avgMargin >= 0 ? "+" : ""}{row.avgMargin.toFixed(1)}</td>
@@ -122,7 +123,7 @@ export function DashboardPage() {
           <div className="space-y-2 md:hidden">
             {h2h.map((row) => (
               <div key={row.opponent} className="rounded-card border border-ink/10 bg-white/60 px-4 py-3">
-                <div className="font-medium">{row.opponent}</div>
+                <div className="font-medium"><Link to={rivalryPath(player, row.opponent)} className="text-terracotta">{row.opponent}</Link></div>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-ink/70">
                   <span>V–T: {row.wins}–{row.losses}</span>
                   <span>Sejrsrate: {row.winRate.toFixed(0)}%</span>
