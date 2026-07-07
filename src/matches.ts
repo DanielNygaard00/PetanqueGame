@@ -101,6 +101,8 @@ matches.get("/", async (c) => {
 matches.put("/:id", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json().catch(() => ({}));
+  const existing = await c.env.DB.prepare("SELECT id FROM matches WHERE id = ?").bind(id).first();
+  if (!existing) return c.json({ message: "Not found" }, 404);
   const row = toRow(body);
   if (Object.keys(row).length) {
     row.updated_at = new Date().toISOString();

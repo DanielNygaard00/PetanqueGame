@@ -12,6 +12,16 @@ export function validateMatch(body: Record<string, any>): string | null {
       if (!Number.isInteger(s) || s < 0 || s > 50) return "score must be an integer 0..50";
     }
   }
+  const seen = new Set<string>();
+  for (const t of teams) {
+    for (const p of Array.isArray(t?.players) ? t.players : []) {
+      if (typeof p !== "string") continue;
+      const key = p.trim().toLowerCase();
+      if (!key) continue;
+      if (seen.has(key)) return "Each player can appear only once per match";
+      seen.add(key);
+    }
+  }
   if (Array.isArray(body.drinks)) {
     for (const d of body.drinks) {
       if (d.count !== undefined && (!Number.isInteger(d.count) || d.count < 1)) {

@@ -18,4 +18,7 @@ describe("validateMatch", () => {
   it("rejects bad drink count", () => {
     expect(validateMatch({ ...base, drinks: [{ count: 0 }] })).toMatch(/drink count/);
   });
+  it("rejects duplicate player across teams", () => {
+    expect(validateMatch({ Dato: "x", teams: [{ players: ["Ida"] }, { players: ["Ida"] }] })).toMatch(/once per match/);
+  });
 });

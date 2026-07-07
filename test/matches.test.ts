@@ -77,4 +77,13 @@ describe("matches CRUD (participants)", () => {
     }, env);
     expect(res.status).toBe(400);
   });
+
+  it("404s PUT on unknown match id", async () => {
+    const fakeId = crypto.randomUUID();
+    const res = await app.request(`/api/matches/${fakeId}`, {
+      method: "PUT", headers: H(),
+      body: JSON.stringify({ teams: [{ score: 13, players: ["Ida"] }, { score: 7, players: ["Bo"] }] }),
+    }, env);
+    expect(res.status).toBe(404);
+  });
 });

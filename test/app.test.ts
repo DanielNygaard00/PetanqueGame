@@ -22,7 +22,7 @@ describe("app wiring", () => {
     expect(res.headers.get("content-type")).toMatch(/application\/json/);
     expect(await res.json()).toEqual({ message: "Not found" });
   });
-  it("returns 500 JSON for unhandled errors (e.g. PUT to unknown match id)", async () => {
+  it("returns 404 JSON for PUT to unknown match id", async () => {
     // Sign up to get a valid token
     const signupRes = await app.request("/api/auth/signup", {
       method: "POST",
@@ -31,8 +31,7 @@ describe("app wiring", () => {
     }, env);
     const { token } = await signupRes.json();
 
-    // PUT to a non-existent match id — UPDATE affects 0 rows, re-SELECT returns null,
-    // toApi(null) throws → onError handler must catch and return 500 JSON.
+    // PUT to a non-existent match id — now returns 404 before touching any participants.
     const res = await app.request("/api/matches/does-not-exist", {
       method: "PUT",
       headers: {
@@ -41,7 +40,7 @@ describe("app wiring", () => {
       },
       body: JSON.stringify({ Spiller: "test" }),
     }, env);
-    expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ message: "Internal server error" });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ message: "Not found" });
   });
 });
