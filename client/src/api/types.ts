@@ -28,3 +28,13 @@ export type Match = {
   teams?: Team[];
   drinks?: Drink[];
 };
+
+export type MatchInput = {
+  Dato?: string;
+  Tid?: string;
+  Arena?: string;
+  "Konsekutive spil"?: number;
+  "Spillets genstande"?: string;
+  teams?: { score: number | null; players: string[] }[];
+  drinks?: Drink[];
+};

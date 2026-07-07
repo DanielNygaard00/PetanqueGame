@@ -12,10 +12,10 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 describe("useMatches", () => {
   it("fetches matches", async () => {
-    vi.spyOn(api, "get").mockResolvedValue({ data: [{ id: "1", Spiller: "Ida" }] } as any);
+    vi.spyOn(api, "get").mockResolvedValue({ data: [{ id: "1", Dato: "2026-07-01" }] } as any);
     const { result } = renderHook(() => useMatches(), { wrapper });
     await waitFor(() => expect(result.current.data?.length).toBe(1));
-    expect(result.current.data?.[0].Spiller).toBe("Ida");
+    expect(result.current.data?.[0].id).toBe("1");
   });
 });
 

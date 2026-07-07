@@ -5,14 +5,21 @@ import { MatchCard } from "../components/MatchCard";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { getToken } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
+import { matchPerspective } from "../stats/perspective";
 
 export function MatchesPage() {
   const { data = [], isLoading } = useMatches();
+  const { user } = useAuth();
   const [q, setQ] = useState("");
   const [onlyWins, setOnlyWins] = useState(false);
-  const filtered = data.filter((m) =>
-    (!q || [m.Spiller, m.Arena, m.Modstander].some((f) => f?.toLowerCase().includes(q.toLowerCase()))) &&
-    (!onlyWins || m.Vundet));
+  const filtered = data.filter((m) => {
+    const names = (m.teams ?? []).flatMap((t) => t.players.map((p) => p.name));
+    const hay = [m.Arena, ...names];
+    const matchesQ = !q || hay.some((f) => f?.toLowerCase().includes(q.toLowerCase()));
+    const won = user?.username ? matchPerspective(m, user.username)?.won === true : false;
+    return matchesQ && (!onlyWins || won);
+  });
 
   async function exportCsv() {
     const res = await fetch("/api/export", { headers: { Authorization: `Bearer ${getToken()}` } });
