@@ -11,6 +11,8 @@ import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { useAuth } from "../auth/AuthContext";
 import { useFormDraft } from "../hooks/useFormDraft";
+import { winProbability } from "../stats/predict";
+import { PredictionBar } from "../components/PredictionBar";
 import type { Match, Drink } from "../api/types";
 
 type FormState = {
@@ -86,6 +88,9 @@ export function MatchFormPage() {
 
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
   const participantNames = form.teams.flatMap((t) => t.players);
+  const prediction = !id && form.teams.length === 2 && form.teams[0].players.length > 0 && form.teams[1].players.length > 0
+    ? winProbability(matches, form.teams[0].players, form.teams[1].players)
+    : null;
 
   function discardDraft() {
     draft.clear();
@@ -138,6 +143,12 @@ export function MatchFormPage() {
         <h3 className="font-display text-lg">Hold</h3>
         <TeamsEditor value={form.teams} onChange={(teams) => set({ teams })} playerOptions={playerNames} onAddPlayer={(v) => addPlayer.mutate(v)} />
       </Card>
+      {prediction !== null && (
+        <Card>
+          <h3 className="mb-2 font-display text-lg">Forudsigelse</h3>
+          <PredictionBar probA={prediction} labelA={form.teams[0].players.join(" + ")} labelB={form.teams[1].players.join(" + ")} />
+        </Card>
+      )}
       <Card>
         <h3 className="mb-2 font-display text-lg">Drikkevarer i denne omgang</h3>
         <DrinksEditor
