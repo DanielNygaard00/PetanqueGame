@@ -20,6 +20,7 @@ import { useAuth } from "../auth/AuthContext";
 import { playerDrinkStats } from "../stats/drinkStats";
 import { SkeletonCards } from "../ui/Skeleton";
 import { rivalryPath } from "../stats/rivalry";
+import { winRateByDrinkType } from "../stats/drinkPerformance";
 
 const TIME_LABELS: Record<string, string> = { morning: "Morgen (5–11)", afternoon: "Eftermiddag (12–16)", evening: "Aften (17–21)", night: "Nat (22–4)", unknown: "Ukendt tid" };
 
@@ -44,6 +45,10 @@ export function DashboardPage() {
   const insights = useMemo(() => deriveInsights(scoped, player), [scoped, player]);
   const h2h = useMemo(() => (player ? headToHead(scoped, player) : []), [scoped, player]);
   const drinkers = useMemo(() => playerDrinkStats(scoped), [scoped]);
+  const typePerf = useMemo(
+    () => (player ? winRateByDrinkType(scoped, player).filter((t) => t.games >= 2) : []),
+    [scoped, player],
+  );
 
   if (isLoading) return <SkeletonCards count={4} />;
 
@@ -180,6 +185,24 @@ export function DashboardPage() {
           </tbody>
         </table>
       </Card>
+
+      {/* Win rate by drink type */}
+      {typePerf.length > 0 && (
+        <Card>
+          <h3 className="mb-3 font-display text-lg">Drikke & præstation</h3>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={typePerf}>
+              <XAxis dataKey="type" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} unit="%" />
+              <Tooltip formatter={(v, _name, item) => [
+                typeof v === "number" ? `${v.toFixed(0)}% (${(item?.payload as { games?: number })?.games ?? "?"} kampe)` : v,
+                "Sejrsrate",
+              ]} />
+              <Bar dataKey="winRate" name="Sejrsrate" fill="#C65D3B" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
 
       {/* InsightsBar lists */}
       <div className="grid gap-4 md:grid-cols-2">
